@@ -47,15 +47,15 @@ export default function Index() {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up" style={{ animationDelay: "0.2s" }}>
               <Button asChild size="lg" className="gap-2 px-8 bg-gradient-primary hover:opacity-90 transition-opacity">
-                <Link to="/dashboard">
-                  <Droplets className="w-5 h-5" />
-                  View Live Dashboard
+                <Link to="/chatbot">
+                  <MessageSquare className="w-5 h-5" />
+                  Chat with AI Assistant
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="gap-2 px-8">
-                <Link to="/methodology">
-                  Learn More
-                  <ArrowRight className="w-4 h-4" />
+                <Link to="/dashboard">
+                  <Droplets className="w-5 h-5" />
+                  View Live Dashboard
                 </Link>
               </Button>
             </div>
