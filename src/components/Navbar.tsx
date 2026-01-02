@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Droplets, Menu, X } from "lucide-react";
+import { Droplets, Menu, X, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const navLinks = [
   { name: "Home", path: "/" },
   { name: "Live Dashboard", path: "/dashboard" },
+  { name: "AI Chatbot", path: "/chatbot", icon: Bot, highlight: true },
   { name: "Methodology", path: "/methodology" },
   { name: "Team", path: "/team" },
 ];
@@ -32,12 +33,17 @@ export function Navbar() {
               <Link
                 key={link.path}
                 to={link.path}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  location.pathname === link.path
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
+                  link.highlight
+                    ? location.pathname === link.path
+                      ? "bg-gradient-primary text-primary-foreground shadow-glow"
+                      : "bg-primary/10 text-primary hover:bg-primary/20"
+                    : location.pathname === link.path
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
               >
+                {link.icon && <link.icon className="w-4 h-4" />}
                 {link.name}
               </Link>
             ))}
@@ -64,12 +70,17 @@ export function Navbar() {
                 key={link.path}
                 to={link.path}
                 onClick={() => setIsOpen(false)}
-                className={`block px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  location.pathname === link.path
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  link.highlight
+                    ? location.pathname === link.path
+                      ? "bg-gradient-primary text-primary-foreground"
+                      : "bg-primary/10 text-primary"
+                    : location.pathname === link.path
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
               >
+                {link.icon && <link.icon className="w-4 h-4" />}
                 {link.name}
               </Link>
             ))}
