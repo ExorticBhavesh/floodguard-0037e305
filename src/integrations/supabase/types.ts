@@ -14,7 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      flood_alerts: {
+        Row: {
+          created_at: string
+          description: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          latitude: number | null
+          location: string
+          longitude: number | null
+          severity: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          latitude?: number | null
+          location: string
+          longitude?: number | null
+          severity: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          latitude?: number | null
+          location?: string
+          longitude?: number | null
+          severity?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
