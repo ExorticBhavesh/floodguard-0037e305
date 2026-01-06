@@ -6,8 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
-import Methodology from "./pages/Methodology";
-import Team from "./pages/Team";
+import Alerts from "./pages/Alerts";
 import Chatbot from "./pages/Chatbot";
 import NotFound from "./pages/NotFound";
 
@@ -23,9 +22,8 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/alerts" element={<Alerts />} />
           <Route path="/chatbot" element={<Chatbot />} />
-          <Route path="/methodology" element={<Methodology />} />
-          <Route path="/team" element={<Team />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
