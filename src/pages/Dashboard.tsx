@@ -8,6 +8,9 @@ import {
   TrendingUp,
   Activity,
   MapPin,
+  Zap,
+  Gauge,
+  ThermometerSun,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
@@ -24,6 +27,10 @@ import {
   AreaChart,
 } from "recharts";
 import { FloodMap } from "@/components/FloodMap";
+import { WeatherWidget } from "@/components/WeatherWidget";
+import { LocationBasedAlerts } from "@/components/LocationBasedAlerts";
+import { PushNotificationToggle } from "@/components/PushNotificationToggle";
+import { useFloodAlerts } from "@/hooks/useFloodAlerts";
 
 type RiskLevel = "low" | "medium" | "high" | "critical";
 
@@ -84,6 +91,7 @@ export default function Dashboard() {
   const [rainfall, setRainfall] = useState(25);
   const [waterLevel, setWaterLevel] = useState(4);
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
+  const { alerts, criticalCount, highCount } = useFloodAlerts();
 
   const riskLevel = calculateRiskLevel(rainfall, waterLevel);
 
@@ -129,24 +137,37 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen pt-16">
-      <div className="flex flex-col lg:flex-row">
+    <div className="min-h-screen pt-16 relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-hero" />
+        <div className="absolute top-20 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[150px] animate-pulse-slow" />
+        <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] animate-float" />
+        {riskLevel === "critical" && (
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-risk-critical/5 rounded-full blur-[200px] animate-pulse" />
+        )}
+      </div>
+
+      <div className="flex flex-col lg:flex-row relative z-10">
         {/* Sidebar */}
-        <aside className="w-full lg:w-80 bg-card border-r border-border p-6 lg:min-h-[calc(100vh-4rem)]">
-          <div className="lg:sticky lg:top-20">
-            <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
-              <Activity className="w-5 h-5 text-primary" />
-              Simulation Controls
-            </h2>
+        <aside className="w-full lg:w-80 bg-card/80 backdrop-blur-sm border-r border-border p-6 lg:min-h-[calc(100vh-4rem)]">
+          <div className="lg:sticky lg:top-20 space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold flex items-center gap-2">
+                <Activity className="w-5 h-5 text-primary" />
+                Controls
+              </h2>
+              <PushNotificationToggle variant="compact" />
+            </div>
 
             {/* Rainfall Slider */}
-            <div className="mb-8">
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
               <div className="flex items-center justify-between mb-3">
                 <label className="text-sm font-medium flex items-center gap-2">
                   <CloudRain className="w-4 h-4 text-primary" />
                   Rainfall Intensity
                 </label>
-                <span className="text-sm font-mono font-bold text-primary">
+                <span className="text-sm font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-lg">
                   {rainfall} mm
                 </span>
               </div>
@@ -164,13 +185,13 @@ export default function Dashboard() {
             </div>
 
             {/* Water Level Slider */}
-            <div className="mb-8">
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
               <div className="flex items-center justify-between mb-3">
                 <label className="text-sm font-medium flex items-center gap-2">
                   <Waves className="w-4 h-4 text-primary" />
                   River Water Level
                 </label>
-                <span className="text-sm font-mono font-bold text-primary">
+                <span className="text-sm font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-lg">
                   {waterLevel.toFixed(1)} m
                 </span>
               </div>
@@ -188,23 +209,26 @@ export default function Dashboard() {
             </div>
 
             {/* Quick Stats */}
-            <div className="space-y-3 pt-6 border-t border-border">
-              <h3 className="text-sm font-semibold text-muted-foreground mb-4">
-                Current Readings
+            <div className="space-y-2">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Sensor Readings
               </h3>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                <span className="text-sm">Soil Moisture</span>
-                <span className="font-mono text-sm font-medium">78%</span>
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                <span className="text-sm">Humidity</span>
-                <span className="font-mono text-sm font-medium">85%</span>
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                <span className="text-sm">Wind Speed</span>
-                <span className="font-mono text-sm font-medium">12 km/h</span>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="p-3 rounded-xl bg-card border border-border text-center">
+                  <ThermometerSun className="w-4 h-4 mx-auto mb-1 text-risk-medium" />
+                  <div className="text-lg font-bold">78%</div>
+                  <div className="text-xs text-muted-foreground">Soil Moisture</div>
+                </div>
+                <div className="p-3 rounded-xl bg-card border border-border text-center">
+                  <Gauge className="w-4 h-4 mx-auto mb-1 text-primary" />
+                  <div className="text-lg font-bold">85%</div>
+                  <div className="text-xs text-muted-foreground">Humidity</div>
+                </div>
               </div>
             </div>
+
+            {/* Nearby Alerts */}
+            <LocationBasedAlerts maxAlerts={2} maxDistance={50} />
           </div>
         </aside>
 
@@ -213,30 +237,43 @@ export default function Dashboard() {
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-2xl font-bold flex items-center gap-2">
-                <Droplets className="w-6 h-6 text-primary" />
-                Live Monitoring Dashboard
+              <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-gradient-primary shadow-glow">
+                  <Droplets className="w-6 h-6 text-primary-foreground" />
+                </div>
+                Live Monitoring
               </h1>
-              <p className="text-muted-foreground text-sm mt-1">
-                Real-time flood risk assessment • Last updated: Just now
+              <p className="text-muted-foreground text-sm mt-1 flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-risk-low opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-risk-low" />
+                </span>
+                Real-time flood risk assessment • Auto-updating
               </p>
             </div>
-            <Button
-              onClick={handleSendAlert}
-              className={`gap-2 ${
-                riskLevel === "critical" || riskLevel === "high"
-                  ? "bg-risk-critical hover:bg-risk-critical/90"
-                  : "bg-primary hover:bg-primary/90"
-              }`}
-            >
-              <Bell className="w-4 h-4" />
-              Send Emergency SMS
-            </Button>
+            <div className="flex items-center gap-3">
+              {(criticalCount > 0 || highCount > 0) && (
+                <div className="px-3 py-1.5 rounded-full bg-risk-critical/10 text-risk-critical text-sm font-medium animate-pulse">
+                  {criticalCount + highCount} Active Warnings
+                </div>
+              )}
+              <Button
+                onClick={handleSendAlert}
+                className={`gap-2 shadow-lg ${
+                  riskLevel === "critical" || riskLevel === "high"
+                    ? "bg-risk-critical hover:bg-risk-critical/90 animate-pulse"
+                    : "bg-primary hover:bg-primary/90"
+                }`}
+              >
+                <Bell className="w-4 h-4" />
+                Send SMS Alert
+              </Button>
+            </div>
           </div>
 
           {/* Risk Status Card */}
           <div
-            className={`p-6 rounded-2xl mb-6 border-2 transition-all duration-500 ${
+            className={`p-6 rounded-3xl mb-6 border-2 transition-all duration-500 backdrop-blur-sm ${
               riskLevel === "low"
                 ? "bg-risk-low/5 border-risk-low/30"
                 : riskLevel === "medium"
@@ -246,36 +283,38 @@ export default function Dashboard() {
                 : "bg-risk-critical/5 border-risk-critical/30 animate-pulse-slow"
             }`}
           >
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
               <div className="flex items-center gap-4">
                 <div
-                  className={`w-16 h-16 rounded-2xl flex items-center justify-center ${getRiskBgColor(
+                  className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg ${getRiskBgColor(
                     riskLevel
-                  )}`}
+                  )} ${riskLevel === "critical" ? "animate-pulse" : ""}`}
                 >
-                  <AlertTriangle className="w-8 h-8 text-white" />
+                  <AlertTriangle className="w-10 h-10 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground font-medium">
-                    Current Risk Level
+                  <p className="text-sm text-muted-foreground font-medium mb-1">
+                    Current Flood Risk Level
                   </p>
-                  <p className={`text-3xl font-bold ${getRiskColor(riskLevel)}`}>
+                  <p className={`text-4xl font-bold ${getRiskColor(riskLevel)}`}>
                     {getRiskLabel(riskLevel)}
                   </p>
                 </div>
               </div>
-              <div className="flex gap-6">
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground">Rainfall</p>
-                  <p className="text-xl font-bold">{rainfall} mm</p>
+              <div className="flex gap-4 sm:gap-8">
+                <div className="text-center p-4 rounded-2xl bg-card/60 backdrop-blur-sm border border-border/50">
+                  <CloudRain className="w-5 h-5 mx-auto mb-1 text-primary" />
+                  <p className="text-2xl font-bold">{rainfall} mm</p>
+                  <p className="text-xs text-muted-foreground">Rainfall</p>
                 </div>
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground">Water Level</p>
-                  <p className="text-xl font-bold">{waterLevel.toFixed(1)} m</p>
+                <div className="text-center p-4 rounded-2xl bg-card/60 backdrop-blur-sm border border-border/50">
+                  <Waves className="w-5 h-5 mx-auto mb-1 text-primary" />
+                  <p className="text-2xl font-bold">{waterLevel.toFixed(1)} m</p>
+                  <p className="text-xs text-muted-foreground">Water Level</p>
                 </div>
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground">Probability</p>
-                  <p className="text-xl font-bold">
+                <div className="text-center p-4 rounded-2xl bg-card/60 backdrop-blur-sm border border-border/50">
+                  <Zap className="w-5 h-5 mx-auto mb-1 text-risk-high" />
+                  <p className="text-2xl font-bold">
                     {riskLevel === "low"
                       ? "15%"
                       : riskLevel === "medium"
@@ -284,25 +323,30 @@ export default function Dashboard() {
                       ? "72%"
                       : "94%"}
                   </p>
+                  <p className="text-xs text-muted-foreground">Probability</p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Charts and Map Grid */}
-          <div className="grid lg:grid-cols-2 gap-6">
+          {/* Weather Widget & Chart Grid */}
+          <div className="grid lg:grid-cols-2 gap-6 mb-6">
+            {/* Weather Widget */}
+            <WeatherWidget />
+
             {/* Water Level Trend Chart */}
-            <div className="p-6 rounded-2xl bg-card border border-border">
+            <div className="p-6 rounded-2xl bg-card/80 backdrop-blur-sm border border-border">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-primary" />
                   Water Level Trends (24h)
                 </h3>
-                <span className="text-xs text-muted-foreground px-2 py-1 rounded-full bg-muted">
+                <span className="text-xs text-muted-foreground px-2 py-1 rounded-full bg-risk-low/10 text-risk-low font-medium flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-risk-low animate-pulse" />
                   Live
                 </span>
               </div>
-              <div className="h-64">
+              <div className="h-56">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={chartData}>
                     <defs>
@@ -314,20 +358,20 @@ export default function Dashboard() {
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(214, 25%, 90%)" />
                     <XAxis
                       dataKey="time"
-                      tick={{ fontSize: 12 }}
+                      tick={{ fontSize: 10 }}
                       stroke="hsl(215, 15%, 45%)"
                     />
                     <YAxis
-                      tick={{ fontSize: 12 }}
+                      tick={{ fontSize: 10 }}
                       stroke="hsl(215, 15%, 45%)"
                       domain={[0, 10]}
-                      label={{ value: "m", angle: -90, position: "insideLeft" }}
                     />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "hsl(0, 0%, 100%)",
                         border: "1px solid hsl(214, 25%, 90%)",
-                        borderRadius: "8px",
+                        borderRadius: "12px",
+                        fontSize: "12px",
                       }}
                     />
                     <Area
@@ -350,80 +394,94 @@ export default function Dashboard() {
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
-              <div className="flex items-center gap-6 mt-4 text-sm">
+              <div className="flex items-center gap-6 mt-3 text-xs">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-primary" />
-                  <span className="text-muted-foreground">Actual Level</span>
+                  <span className="text-muted-foreground">Actual</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-0.5 bg-risk-medium" style={{ borderStyle: "dashed" }} />
+                  <div className="w-4 h-0.5 bg-risk-medium" style={{ borderStyle: "dashed" }} />
                   <span className="text-muted-foreground">Predicted</span>
                 </div>
               </div>
             </div>
+          </div>
 
+          {/* Map & Recent Alerts Grid */}
+          <div className="grid lg:grid-cols-2 gap-6">
             {/* Map */}
-            <div className="p-6 rounded-2xl bg-card border border-border">
+            <div className="p-6 rounded-2xl bg-card/80 backdrop-blur-sm border border-border">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold flex items-center gap-2">
                   <MapPin className="w-5 h-5 text-primary" />
                   Flood Zone Map
                 </h3>
-                <span className="text-xs text-muted-foreground px-2 py-1 rounded-full bg-muted">
+                <span className="text-xs text-muted-foreground px-2 py-1 rounded-full bg-muted font-medium">
                   Interactive
                 </span>
               </div>
               <div className="h-64 rounded-xl overflow-hidden">
                 <FloodMap riskLevel={riskLevel} />
               </div>
-              <div className="flex items-center gap-4 mt-4 text-sm">
+              <div className="flex items-center gap-4 mt-4 text-xs">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-risk-critical" />
                   <span className="text-muted-foreground">High Risk</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-risk-medium" />
-                  <span className="text-muted-foreground">Medium Risk</span>
+                  <span className="text-muted-foreground">Medium</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-risk-low" />
-                  <span className="text-muted-foreground">Low Risk</span>
+                  <span className="text-muted-foreground">Low</span>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Alert Log */}
-          <div className="mt-6 p-6 rounded-2xl bg-card border border-border">
-            <h3 className="font-semibold mb-4 flex items-center gap-2">
-              <Bell className="w-5 h-5 text-primary" />
-              Recent Alerts
-            </h3>
-            <div className="space-y-3">
-              {[
-                { time: "14:32", message: "Water level threshold exceeded", level: "high" },
-                { time: "12:15", message: "Heavy rainfall detected upstream", level: "medium" },
-                { time: "09:45", message: "System check completed", level: "low" },
-              ].map((alert, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-4 p-3 rounded-lg bg-muted/50"
-                >
-                  <span className="text-xs font-mono text-muted-foreground">
-                    {alert.time}
-                  </span>
+            {/* Recent Alerts */}
+            <div className="p-6 rounded-2xl bg-card/80 backdrop-blur-sm border border-border">
+              <h3 className="font-semibold mb-4 flex items-center gap-2">
+                <Bell className="w-5 h-5 text-primary" />
+                Recent System Alerts
+              </h3>
+              <div className="space-y-3">
+                {alerts.slice(0, 4).map((alert, i) => (
                   <div
-                    className={`w-2 h-2 rounded-full ${
-                      alert.level === "high"
-                        ? "bg-risk-high"
-                        : alert.level === "medium"
-                        ? "bg-risk-medium"
-                        : "bg-risk-low"
-                    }`}
-                  />
-                  <span className="text-sm">{alert.message}</span>
-                </div>
-              ))}
+                    key={alert.id}
+                    className="flex items-center gap-4 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+                  >
+                    <div
+                      className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                        alert.severity === "critical"
+                          ? "bg-risk-critical animate-pulse"
+                          : alert.severity === "high"
+                          ? "bg-risk-high"
+                          : alert.severity === "medium"
+                          ? "bg-risk-medium"
+                          : "bg-risk-low"
+                      }`}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-medium truncate block">{alert.title}</span>
+                      <span className="text-xs text-muted-foreground">{alert.location}</span>
+                    </div>
+                    <span className={`text-xs font-bold uppercase ${
+                      alert.severity === "critical" ? "text-risk-critical" :
+                      alert.severity === "high" ? "text-risk-high" :
+                      alert.severity === "medium" ? "text-risk-medium" : "text-risk-low"
+                    }`}>
+                      {alert.severity}
+                    </span>
+                  </div>
+                ))}
+                {alerts.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Bell className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                    <p className="text-sm">No recent alerts</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </main>
