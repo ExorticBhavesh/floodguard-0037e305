@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.weather-alerts]
 verify_jwt = false
+
+[functions.flood-predict]
+verify_jwt = false
+
+[functions.send-sms-alert]
+verify_jwt = false
