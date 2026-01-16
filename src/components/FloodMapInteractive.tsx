@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { MapContainer, TileLayer, GeoJSON, Marker, Popup, Circle, useMap } from "react-leaflet";
 import L from "leaflet";
-import { MapPin, AlertTriangle, Waves, Mountain } from "lucide-react";
+import { MapPin, AlertTriangle, Mountain } from "lucide-react";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useFloodAlerts } from "@/hooks/useFloodAlerts";
 import "leaflet/dist/leaflet.css";
@@ -183,6 +183,9 @@ export function FloodMapInteractive({
     `);
   };
 
+  // Memoize geoJSON key to prevent re-render issues
+  const geoJsonKey = useMemo(() => `flood-zones-${Date.now()}`, []);
+
   return (
     <div className="relative rounded-xl overflow-hidden border border-border" style={{ height }}>
       <MapContainer
@@ -198,19 +201,18 @@ export function FloodMapInteractive({
         
         <MapController center={center} />
 
-        {/* Flood Zones Layer */}
         {showFloodZones && (
           <GeoJSON
+            key={geoJsonKey}
             data={floodZonesGeoJSON}
             style={zoneStyle}
             onEachFeature={onEachZone}
           />
         )}
 
-        {/* Elevation Points Layer */}
         {showElevation && elevationPoints.map((point, i) => (
           <Circle
-            key={i}
+            key={`elevation-${i}`}
             center={[point.lat, point.lon]}
             radius={300}
             pathOptions={{
@@ -228,32 +230,29 @@ export function FloodMapInteractive({
           </Circle>
         ))}
 
-        {/* Alert Markers */}
-        {showAlerts && alerts.map((alert) => (
-          alert.latitude && alert.longitude && (
-            <Marker
-              key={alert.id}
-              position={[Number(alert.latitude), Number(alert.longitude)]}
-            >
-              <Popup>
-                <div className="p-1">
-                  <p className="font-semibold text-sm flex items-center gap-1">
-                    <AlertTriangle className="w-3 h-3 text-risk-critical" />
-                    {alert.title}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">{alert.description}</p>
-                  <p className="text-xs mt-1">
-                    Severity: <span className="font-semibold">{alert.severity.toUpperCase()}</span>
-                  </p>
-                </div>
-              </Popup>
-            </Marker>
-          )
+        {showAlerts && alerts.filter(alert => alert.latitude && alert.longitude).map((alert) => (
+          <Marker
+            key={`alert-${alert.id}`}
+            position={[Number(alert.latitude), Number(alert.longitude)]}
+          >
+            <Popup>
+              <div className="p-1">
+                <p className="font-semibold text-sm flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3 text-destructive" />
+                  {alert.title}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">{alert.description}</p>
+                <p className="text-xs mt-1">
+                  Severity: <span className="font-semibold">{alert.severity.toUpperCase()}</span>
+                </p>
+              </div>
+            </Popup>
+          </Marker>
         ))}
 
-        {/* User Location */}
         {hasLocation && (
           <Circle
+            key="user-location"
             center={[latitude, longitude]}
             radius={200}
             pathOptions={{
