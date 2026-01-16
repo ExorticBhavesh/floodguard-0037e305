@@ -21,26 +21,27 @@ export function useFloodAlerts() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchAlerts = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from("flood_alerts")
+        .select("*")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setAlerts(data as FloodAlert[]);
+    } catch (err) {
+      console.error("Error fetching alerts:", err);
+      setError("Failed to load alerts");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Fetch initial alerts
   useEffect(() => {
-    const fetchAlerts = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("flood_alerts")
-          .select("*")
-          .eq("is_active", true)
-          .order("created_at", { ascending: false });
-
-        if (error) throw error;
-        setAlerts(data as FloodAlert[]);
-      } catch (err) {
-        console.error("Error fetching alerts:", err);
-        setError("Failed to load alerts");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchAlerts();
   }, []);
 
@@ -102,5 +103,6 @@ export function useFloodAlerts() {
     criticalCount,
     highCount,
     totalCount: activeAlerts.length,
+    refetch: fetchAlerts,
   };
 }

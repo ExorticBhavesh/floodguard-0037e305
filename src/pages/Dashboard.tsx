@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Droplets,
   CloudRain,
@@ -11,10 +11,16 @@ import {
   Zap,
   Gauge,
   ThermometerSun,
+  RefreshCw,
+  Layers,
+  Map,
+  Mountain,
+  BarChart3,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   LineChart,
   Line,
@@ -27,10 +33,17 @@ import {
   AreaChart,
 } from "recharts";
 import { FloodMap } from "@/components/FloodMap";
+import { FloodMapInteractive } from "@/components/FloodMapInteractive";
 import { WeatherWidget } from "@/components/WeatherWidget";
 import { LocationBasedAlerts } from "@/components/LocationBasedAlerts";
 import { PushNotificationToggle } from "@/components/PushNotificationToggle";
+import { PredictionPanel } from "@/components/PredictionPanel";
+import { ElevationHeatmap } from "@/components/ElevationHeatmap";
+import { SystemHealthCheck } from "@/components/SystemHealthCheck";
 import { useFloodAlerts } from "@/hooks/useFloodAlerts";
+import { useFloodPrediction } from "@/hooks/useFloodPrediction";
+import { useGeolocation } from "@/hooks/useGeolocation";
+import { Badge } from "@/components/ui/badge";
 
 type RiskLevel = "low" | "medium" | "high" | "critical";
 
@@ -38,14 +51,6 @@ interface ChartDataPoint {
   time: string;
   level: number;
   predicted: number;
-}
-
-function calculateRiskLevel(rainfall: number, waterLevel: number): RiskLevel {
-  const score = rainfall * 0.4 + waterLevel * 6;
-  if (score < 30) return "low";
-  if (score < 50) return "medium";
-  if (score < 70) return "high";
-  return "critical";
 }
 
 function getRiskColor(risk: RiskLevel): string {
@@ -90,10 +95,19 @@ function getRiskLabel(risk: RiskLevel): string {
 export default function Dashboard() {
   const [rainfall, setRainfall] = useState(25);
   const [waterLevel, setWaterLevel] = useState(4);
+  const [humidity, setHumidity] = useState(70);
+  const [soilMoisture, setSoilMoisture] = useState(50);
+  const [elevation, setElevation] = useState(20);
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
-  const { alerts, criticalCount, highCount } = useFloodAlerts();
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  
+  const { alerts, criticalCount, highCount, refetch: refetchAlerts } = useFloodAlerts();
+  const { prediction, isLoading: isPredicting, predict, sendSMSAlert } = useFloodPrediction();
+  const { latitude, longitude, hasLocation } = useGeolocation();
 
-  const riskLevel = calculateRiskLevel(rainfall, waterLevel);
+  // Get current risk level from prediction or calculate locally
+  const riskLevel: RiskLevel = prediction?.riskLevel || "low";
 
   // Generate initial chart data
   useEffect(() => {
@@ -122,19 +136,44 @@ export default function Dashboard() {
       newData[newData.length - 1] = {
         ...newData[newData.length - 1],
         level: waterLevel,
-        predicted: waterLevel + 0.3 + Math.random() * 0.5,
+        predicted: prediction?.predictedWaterLevel || waterLevel + 0.3 + Math.random() * 0.5,
       };
       return newData;
     });
-  }, [waterLevel]);
+  }, [waterLevel, prediction?.predictedWaterLevel]);
 
-  const handleSendAlert = () => {
+  // Auto-refresh data every 30 seconds
+  useEffect(() => {
+    if (!autoRefresh) return;
+    
+    const interval = setInterval(() => {
+      refetchAlerts();
+      setLastRefresh(new Date());
+      
+      // Simulate slight variations in sensor readings
+      setHumidity(prev => Math.min(100, Math.max(0, prev + (Math.random() - 0.5) * 5)));
+      setSoilMoisture(prev => Math.min(100, Math.max(0, prev + (Math.random() - 0.5) * 3)));
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [autoRefresh, refetchAlerts]);
+
+  const handleSendAlert = useCallback(async () => {
+    const location = hasLocation 
+      ? `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
+      : "Ahmedabad, Gujarat";
+    
+    await sendSMSAlert(riskLevel, location);
+  }, [riskLevel, hasLocation, latitude, longitude, sendSMSAlert]);
+
+  const handleManualRefresh = useCallback(() => {
+    refetchAlerts();
+    setLastRefresh(new Date());
     toast({
-      title: "Emergency Alert Sent",
-      description: `Alert Sent via Twilio to Local Authorities: ${getRiskLabel(riskLevel)} Risk Level Detected`,
-      variant: riskLevel === "critical" || riskLevel === "high" ? "destructive" : "default",
+      title: "Data Refreshed",
+      description: "All sensors and predictions updated",
     });
-  };
+  }, [refetchAlerts]);
 
   return (
     <div className="min-h-screen pt-16 relative overflow-hidden">
@@ -208,6 +247,30 @@ export default function Dashboard() {
               </div>
             </div>
 
+            {/* Humidity Slider */}
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <Gauge className="w-4 h-4 text-primary" />
+                  Humidity
+                </label>
+                <span className="text-sm font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-lg">
+                  {humidity.toFixed(0)}%
+                </span>
+              </div>
+              <Slider
+                value={[humidity]}
+                onValueChange={(v) => setHumidity(v[0])}
+                max={100}
+                step={1}
+                className="mb-2"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>0%</span>
+                <span>100%</span>
+              </div>
+            </div>
+
             {/* Quick Stats */}
             <div className="space-y-2">
               <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
@@ -216,13 +279,13 @@ export default function Dashboard() {
               <div className="grid grid-cols-2 gap-2">
                 <div className="p-3 rounded-xl bg-card border border-border text-center">
                   <ThermometerSun className="w-4 h-4 mx-auto mb-1 text-risk-medium" />
-                  <div className="text-lg font-bold">78%</div>
+                  <div className="text-lg font-bold">{soilMoisture.toFixed(0)}%</div>
                   <div className="text-xs text-muted-foreground">Soil Moisture</div>
                 </div>
                 <div className="p-3 rounded-xl bg-card border border-border text-center">
-                  <Gauge className="w-4 h-4 mx-auto mb-1 text-primary" />
-                  <div className="text-lg font-bold">85%</div>
-                  <div className="text-xs text-muted-foreground">Humidity</div>
+                  <Mountain className="w-4 h-4 mx-auto mb-1 text-primary" />
+                  <div className="text-lg font-bold">{elevation}m</div>
+                  <div className="text-xs text-muted-foreground">Elevation</div>
                 </div>
               </div>
             </div>
@@ -248,7 +311,7 @@ export default function Dashboard() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-risk-low opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-risk-low" />
                 </span>
-                Real-time flood risk assessment • Auto-updating
+                Real-time flood risk assessment • Last updated: {lastRefresh.toLocaleTimeString()}
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -257,6 +320,15 @@ export default function Dashboard() {
                   {criticalCount + highCount} Active Warnings
                 </div>
               )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleManualRefresh}
+                className="gap-2"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Refresh
+              </Button>
               <Button
                 onClick={handleSendAlert}
                 className={`gap-2 shadow-lg ${
@@ -271,62 +343,18 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Risk Status Card */}
-          <div
-            className={`p-6 rounded-3xl mb-6 border-2 transition-all duration-500 backdrop-blur-sm ${
-              riskLevel === "low"
-                ? "bg-risk-low/5 border-risk-low/30"
-                : riskLevel === "medium"
-                ? "bg-risk-medium/5 border-risk-medium/30"
-                : riskLevel === "high"
-                ? "bg-risk-high/5 border-risk-high/30"
-                : "bg-risk-critical/5 border-risk-critical/30 animate-pulse-slow"
-            }`}
-          >
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-              <div className="flex items-center gap-4">
-                <div
-                  className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg ${getRiskBgColor(
-                    riskLevel
-                  )} ${riskLevel === "critical" ? "animate-pulse" : ""}`}
-                >
-                  <AlertTriangle className="w-10 h-10 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground font-medium mb-1">
-                    Current Flood Risk Level
-                  </p>
-                  <p className={`text-4xl font-bold ${getRiskColor(riskLevel)}`}>
-                    {getRiskLabel(riskLevel)}
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-4 sm:gap-8">
-                <div className="text-center p-4 rounded-2xl bg-card/60 backdrop-blur-sm border border-border/50">
-                  <CloudRain className="w-5 h-5 mx-auto mb-1 text-primary" />
-                  <p className="text-2xl font-bold">{rainfall} mm</p>
-                  <p className="text-xs text-muted-foreground">Rainfall</p>
-                </div>
-                <div className="text-center p-4 rounded-2xl bg-card/60 backdrop-blur-sm border border-border/50">
-                  <Waves className="w-5 h-5 mx-auto mb-1 text-primary" />
-                  <p className="text-2xl font-bold">{waterLevel.toFixed(1)} m</p>
-                  <p className="text-xs text-muted-foreground">Water Level</p>
-                </div>
-                <div className="text-center p-4 rounded-2xl bg-card/60 backdrop-blur-sm border border-border/50">
-                  <Zap className="w-5 h-5 mx-auto mb-1 text-risk-high" />
-                  <p className="text-2xl font-bold">
-                    {riskLevel === "low"
-                      ? "15%"
-                      : riskLevel === "medium"
-                      ? "45%"
-                      : riskLevel === "high"
-                      ? "72%"
-                      : "94%"}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Probability</p>
-                </div>
-              </div>
-            </div>
+          {/* ML Prediction Panel - Full Width */}
+          <div className="mb-6">
+            <PredictionPanel
+              rainfall={rainfall}
+              riverLevel={waterLevel}
+              humidity={humidity}
+              elevation={elevation}
+              soilMoisture={soilMoisture}
+              autoPredict={true}
+              lat={hasLocation ? latitude : undefined}
+              lon={hasLocation ? longitude : undefined}
+            />
           </div>
 
           {/* Weather Widget & Chart Grid */}
@@ -407,37 +435,86 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Map & Recent Alerts Grid */}
+          {/* GIS Map & Elevation Tabs */}
+          <div className="mb-6">
+            <Tabs defaultValue="interactive-map" className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="interactive-map" className="gap-2">
+                  <Map className="w-4 h-4" />
+                  Interactive GIS Map
+                </TabsTrigger>
+                <TabsTrigger value="elevation" className="gap-2">
+                  <Mountain className="w-4 h-4" />
+                  Elevation Analysis
+                </TabsTrigger>
+                <TabsTrigger value="simple-map" className="gap-2">
+                  <Layers className="w-4 h-4" />
+                  Quick View
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="interactive-map" className="mt-0">
+                <div className="p-6 rounded-2xl bg-card/80 backdrop-blur-sm border border-border">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <MapPin className="w-5 h-5 text-primary" />
+                      Interactive Flood Zone Map
+                    </h3>
+                    <Badge variant="outline" className="gap-1.5">
+                      <Layers className="w-3 h-3" />
+                      GeoJSON + LiDAR
+                    </Badge>
+                  </div>
+                  <FloodMapInteractive
+                    showElevation={true}
+                    showFloodZones={true}
+                    showAlerts={true}
+                    height="450px"
+                  />
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="elevation" className="mt-0">
+                <ElevationHeatmap />
+              </TabsContent>
+              
+              <TabsContent value="simple-map" className="mt-0">
+                <div className="p-6 rounded-2xl bg-card/80 backdrop-blur-sm border border-border">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <MapPin className="w-5 h-5 text-primary" />
+                      Flood Zone Map
+                    </h3>
+                    <span className="text-xs text-muted-foreground px-2 py-1 rounded-full bg-muted font-medium">
+                      Quick View
+                    </span>
+                  </div>
+                  <div className="h-64 rounded-xl overflow-hidden">
+                    <FloodMap riskLevel={riskLevel} />
+                  </div>
+                  <div className="flex items-center gap-4 mt-4 text-xs">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-risk-critical" />
+                      <span className="text-muted-foreground">High Risk</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-risk-medium" />
+                      <span className="text-muted-foreground">Medium</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-risk-low" />
+                      <span className="text-muted-foreground">Low</span>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          {/* System Health & Recent Alerts Grid */}
           <div className="grid lg:grid-cols-2 gap-6">
-            {/* Map */}
-            <div className="p-6 rounded-2xl bg-card/80 backdrop-blur-sm border border-border">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-primary" />
-                  Flood Zone Map
-                </h3>
-                <span className="text-xs text-muted-foreground px-2 py-1 rounded-full bg-muted font-medium">
-                  Interactive
-                </span>
-              </div>
-              <div className="h-64 rounded-xl overflow-hidden">
-                <FloodMap riskLevel={riskLevel} />
-              </div>
-              <div className="flex items-center gap-4 mt-4 text-xs">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-risk-critical" />
-                  <span className="text-muted-foreground">High Risk</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-risk-medium" />
-                  <span className="text-muted-foreground">Medium</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-risk-low" />
-                  <span className="text-muted-foreground">Low</span>
-                </div>
-              </div>
-            </div>
+            {/* System Health Check */}
+            <SystemHealthCheck />
 
             {/* Recent Alerts */}
             <div className="p-6 rounded-2xl bg-card/80 backdrop-blur-sm border border-border">
@@ -446,7 +523,7 @@ export default function Dashboard() {
                 Recent System Alerts
               </h3>
               <div className="space-y-3">
-                {alerts.slice(0, 4).map((alert, i) => (
+                {alerts.slice(0, 5).map((alert) => (
                   <div
                     key={alert.id}
                     className="flex items-center gap-4 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
