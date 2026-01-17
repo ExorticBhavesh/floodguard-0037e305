@@ -1,19 +1,61 @@
-import { useRef, useEffect } from "react";
-import { Bot, Trash2, Shield, Waves, Sparkles } from "lucide-react";
+import { useRef, useEffect, useState } from "react";
+import { Trash2, Shield, Waves, Sparkles, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { QuickActions } from "@/components/chat/QuickActions";
+import { AnimatedAvatar } from "@/components/chat/AnimatedAvatar";
 import { useFloodChat } from "@/hooks/useFloodChat";
+import { useTTS } from "@/hooks/useTTS";
 
 export default function Chatbot() {
   const { messages, isLoading, sendMessage, clearMessages } = useFloodChat();
+  const { speak, stop, isSpeaking, isLoading: isLoadingAudio } = useTTS();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [autoSpeak, setAutoSpeak] = useState(true);
+  const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
+  const lastSpokenRef = useRef<number>(-1);
+
 
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Auto-speak new assistant messages
+  useEffect(() => {
+    if (!autoSpeak || isLoading) return;
+    
+    const lastMessage = messages[messages.length - 1];
+    const lastIndex = messages.length - 1;
+    
+    if (
+      lastMessage?.role === "assistant" && 
+      lastMessage.content && 
+      lastIndex > lastSpokenRef.current
+    ) {
+      lastSpokenRef.current = lastIndex;
+      setSpeakingIndex(lastIndex);
+      speak(lastMessage.content);
+    }
+  }, [messages, isLoading, autoSpeak, speak]);
+
+  // Reset speaking index when audio stops
+  useEffect(() => {
+    if (!isSpeaking) {
+      setSpeakingIndex(null);
+    }
+  }, [isSpeaking]);
+
+  const handleSpeak = (content: string, index: number) => {
+    setSpeakingIndex(index);
+    speak(content);
+  };
+
+  const handleStopSpeaking = () => {
+    stop();
+    setSpeakingIndex(null);
+  };
 
   const hasMessages = messages.length > 0;
 
@@ -31,19 +73,12 @@ export default function Chatbot() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <div className="relative">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-glow">
-                <Bot className="w-7 h-7 text-primary-foreground" />
-              </div>
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-risk-low rounded-full flex items-center justify-center border-2 border-background">
-                <Sparkles className="w-3 h-3 text-primary-foreground" />
-              </div>
-            </div>
+            <AnimatedAvatar isSpeaking={isSpeaking} size="lg" className="shadow-glow" />
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2">
                 FloodGuard AI
                 <span className="px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
-                  Powered by AI
+                  Voice Enabled
                 </span>
               </h1>
               <p className="text-sm text-muted-foreground">
@@ -52,17 +87,41 @@ export default function Chatbot() {
             </div>
           </div>
           
-          {hasMessages && (
+          <div className="flex items-center gap-2">
+            {/* Auto-speak toggle */}
             <Button
-              variant="ghost"
+              variant={autoSpeak ? "default" : "ghost"}
               size="sm"
-              onClick={clearMessages}
-              className="gap-2 text-muted-foreground hover:text-destructive"
+              onClick={() => setAutoSpeak(!autoSpeak)}
+              className="gap-2"
+              title={autoSpeak ? "Auto-speak is ON" : "Auto-speak is OFF"}
             >
-              <Trash2 className="w-4 h-4" />
-              Clear Chat
+              {autoSpeak ? (
+                <Volume2 className="w-4 h-4" />
+              ) : (
+                <VolumeX className="w-4 h-4" />
+              )}
+              <span className="hidden sm:inline">
+                {autoSpeak ? "Voice On" : "Voice Off"}
+              </span>
             </Button>
-          )}
+
+            {hasMessages && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  stop();
+                  clearMessages();
+                  lastSpokenRef.current = -1;
+                }}
+                className="gap-2 text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span className="hidden sm:inline">Clear</span>
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Chat Area */}
@@ -71,11 +130,9 @@ export default function Chatbot() {
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
             {!hasMessages ? (
               <div className="h-full flex flex-col items-center justify-center text-center px-4">
-                {/* Welcome State */}
+                {/* Welcome State with Animated Avatar */}
                 <div className="relative mb-8">
-                  <div className="w-24 h-24 rounded-3xl bg-gradient-primary flex items-center justify-center shadow-glow animate-float">
-                    <Shield className="w-12 h-12 text-primary-foreground" />
-                  </div>
+                  <AnimatedAvatar isSpeaking={false} size="lg" className="shadow-glow animate-float" />
                   <div className="absolute -top-2 -right-2 w-8 h-8 bg-card rounded-full flex items-center justify-center shadow-md">
                     <Waves className="w-4 h-4 text-primary" />
                   </div>
@@ -84,8 +141,12 @@ export default function Chatbot() {
                 <h2 className="text-xl sm:text-2xl font-bold mb-2">
                   Welcome to FloodGuard AI
                 </h2>
-                <p className="text-muted-foreground mb-8 max-w-md">
-                  I'm here to help you with flood safety information, evacuation procedures, and emergency preparedness. Ask me anything!
+                <p className="text-muted-foreground mb-2 max-w-md">
+                  I'm here to help you with flood safety information, evacuation procedures, and emergency preparedness.
+                </p>
+                <p className="text-sm text-primary mb-8 flex items-center gap-2">
+                  <Volume2 className="w-4 h-4" />
+                  I can speak! Ask me anything.
                 </p>
 
                 {/* Quick Actions */}
@@ -104,6 +165,10 @@ export default function Chatbot() {
                     role={msg.role}
                     content={msg.content}
                     isStreaming={isLoading && i === messages.length - 1 && msg.role === "assistant"}
+                    isSpeaking={speakingIndex === i && isSpeaking}
+                    isLoadingAudio={speakingIndex === i && isLoadingAudio}
+                    onSpeak={() => handleSpeak(msg.content, i)}
+                    onStopSpeaking={handleStopSpeaking}
                   />
                 ))}
                 <div ref={messagesEndRef} />
