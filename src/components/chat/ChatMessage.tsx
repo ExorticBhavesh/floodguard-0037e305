@@ -1,7 +1,8 @@
 import { User, Volume2, VolumeX, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { AnimatedAvatar } from "./AnimatedAvatar";
+import { AnimatedAvatar, detectEmotion, AvatarEmotion } from "./AnimatedAvatar";
 import { Button } from "@/components/ui/button";
+import { useMemo } from "react";
 
 interface ChatMessageProps {
   role: "user" | "assistant";
@@ -24,6 +25,13 @@ export function ChatMessage({
 }: ChatMessageProps) {
   const isAssistant = role === "assistant";
 
+  // Detect emotion from message content
+  const emotion: AvatarEmotion = useMemo(() => {
+    if (isStreaming) return "thinking";
+    if (!content) return "neutral";
+    return detectEmotion(content);
+  }, [content, isStreaming]);
+
   return (
     <div
       className={cn(
@@ -34,7 +42,8 @@ export function ChatMessage({
       {/* Avatar */}
       {isAssistant ? (
         <AnimatedAvatar 
-          isSpeaking={isSpeaking || false} 
+          isSpeaking={isSpeaking || false}
+          emotion={emotion}
           size="sm" 
           className="flex-shrink-0 shadow-glow"
         />

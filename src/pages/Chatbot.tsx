@@ -82,7 +82,7 @@ export default function Chatbot() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <AnimatedAvatar isSpeaking={isSpeaking} size="lg" className="shadow-glow" />
+            <AnimatedAvatar isSpeaking={isSpeaking} emotion="happy" size="lg" className="shadow-glow" />
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2">
                 FloodGuard AI
@@ -149,7 +149,7 @@ export default function Chatbot() {
               <div className="h-full flex flex-col items-center justify-center text-center px-4">
                 {/* Welcome State with Animated Avatar */}
                 <div className="relative mb-8">
-                  <AnimatedAvatar isSpeaking={false} size="lg" className="shadow-glow animate-float" />
+                  <AnimatedAvatar isSpeaking={false} emotion="happy" size="lg" className="shadow-glow animate-float" />
                   <div className="absolute -top-2 -right-2 w-8 h-8 bg-card rounded-full flex items-center justify-center shadow-md">
                     <Waves className="w-4 h-4 text-primary" />
                   </div>
