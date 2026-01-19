@@ -1,19 +1,28 @@
-import { useRef, useEffect, useState } from "react";
-import { Trash2, Shield, Waves, Sparkles, Volume2, VolumeX } from "lucide-react";
+import { useRef, useEffect } from "react";
+import { Trash2, Waves, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { QuickActions } from "@/components/chat/QuickActions";
 import { AnimatedAvatar } from "@/components/chat/AnimatedAvatar";
+import { VoiceSettings } from "@/components/chat/VoiceSettings";
 import { useFloodChat } from "@/hooks/useFloodChat";
 import { useTTS } from "@/hooks/useTTS";
 
 export default function Chatbot() {
   const { messages, isLoading, sendMessage, clearMessages } = useFloodChat();
-  const { speak, stop, isSpeaking, isLoading: isLoadingAudio } = useTTS();
+  const { 
+    speak, 
+    stop, 
+    isSpeaking, 
+    isLoading: isLoadingAudio, 
+    settings, 
+    updateSettings,
+    useFallbackMode,
+    resetToElevenLabs
+  } = useTTS();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [autoSpeak, setAutoSpeak] = useState(true);
-  const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
+  const speakingIndexRef = useRef<number | null>(null);
   const lastSpokenRef = useRef<number>(-1);
 
 
@@ -24,7 +33,7 @@ export default function Chatbot() {
 
   // Auto-speak new assistant messages
   useEffect(() => {
-    if (!autoSpeak || isLoading) return;
+    if (!settings.autoSpeak || isLoading) return;
     
     const lastMessage = messages[messages.length - 1];
     const lastIndex = messages.length - 1;
@@ -35,26 +44,26 @@ export default function Chatbot() {
       lastIndex > lastSpokenRef.current
     ) {
       lastSpokenRef.current = lastIndex;
-      setSpeakingIndex(lastIndex);
+      speakingIndexRef.current = lastIndex;
       speak(lastMessage.content);
     }
-  }, [messages, isLoading, autoSpeak, speak]);
+  }, [messages, isLoading, settings.autoSpeak, speak]);
 
   // Reset speaking index when audio stops
   useEffect(() => {
     if (!isSpeaking) {
-      setSpeakingIndex(null);
+      speakingIndexRef.current = null;
     }
   }, [isSpeaking]);
 
   const handleSpeak = (content: string, index: number) => {
-    setSpeakingIndex(index);
+    speakingIndexRef.current = index;
     speak(content);
   };
 
   const handleStopSpeaking = () => {
     stop();
-    setSpeakingIndex(null);
+    speakingIndexRef.current = null;
   };
 
   const hasMessages = messages.length > 0;
@@ -88,23 +97,31 @@ export default function Chatbot() {
           </div>
           
           <div className="flex items-center gap-2">
-            {/* Auto-speak toggle */}
+            {/* Quick auto-speak toggle */}
             <Button
-              variant={autoSpeak ? "default" : "ghost"}
+              variant={settings.autoSpeak ? "default" : "ghost"}
               size="sm"
-              onClick={() => setAutoSpeak(!autoSpeak)}
+              onClick={() => updateSettings({ autoSpeak: !settings.autoSpeak })}
               className="gap-2"
-              title={autoSpeak ? "Auto-speak is ON" : "Auto-speak is OFF"}
+              title={settings.autoSpeak ? "Auto-speak is ON" : "Auto-speak is OFF"}
             >
-              {autoSpeak ? (
+              {settings.autoSpeak ? (
                 <Volume2 className="w-4 h-4" />
               ) : (
                 <VolumeX className="w-4 h-4" />
               )}
               <span className="hidden sm:inline">
-                {autoSpeak ? "Voice On" : "Voice Off"}
+                {settings.autoSpeak ? "Voice On" : "Voice Off"}
               </span>
             </Button>
+
+            {/* Voice Settings */}
+            <VoiceSettings
+              settings={settings}
+              onSettingsChange={updateSettings}
+              useFallbackMode={useFallbackMode}
+              onResetToElevenLabs={resetToElevenLabs}
+            />
 
             {hasMessages && (
               <Button
@@ -165,8 +182,8 @@ export default function Chatbot() {
                     role={msg.role}
                     content={msg.content}
                     isStreaming={isLoading && i === messages.length - 1 && msg.role === "assistant"}
-                    isSpeaking={speakingIndex === i && isSpeaking}
-                    isLoadingAudio={speakingIndex === i && isLoadingAudio}
+                    isSpeaking={speakingIndexRef.current === i && isSpeaking}
+                    isLoadingAudio={speakingIndexRef.current === i && isLoadingAudio}
                     onSpeak={() => handleSpeak(msg.content, i)}
                     onStopSpeaking={handleStopSpeaking}
                   />
