@@ -16,6 +16,7 @@ import {
   Map,
   Mountain,
   BarChart3,
+  Download,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,13 @@ import { useFloodAlerts } from "@/hooks/useFloodAlerts";
 import { useFloodPrediction } from "@/hooks/useFloodPrediction";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { Badge } from "@/components/ui/badge";
+import { RiskGauge } from "@/components/dashboard/RiskGauge";
+import { LiveDataFeed } from "@/components/dashboard/LiveDataFeed";
+import { QuickInsights } from "@/components/dashboard/QuickInsights";
+import { SystemStatusMini } from "@/components/dashboard/SystemStatusMini";
+import { EngagementStats } from "@/components/dashboard/EngagementStats";
+import { ExportDropdown } from "@/components/ExportDropdown";
+import { exportPredictionToCSV, exportPredictionToPDF } from "@/lib/exportUtils";
 
 type RiskLevel = "low" | "medium" | "high" | "critical";
 
@@ -188,9 +196,10 @@ export default function Dashboard() {
       </div>
 
       <div className="flex flex-col lg:flex-row relative z-10">
-        {/* Sidebar */}
-        <aside className="w-full lg:w-72 bg-card/95 backdrop-blur-sm border-r border-border p-5 lg:min-h-[calc(100vh-3.5rem)]">
-          <div className="lg:sticky lg:top-18 space-y-5">
+        {/* Sidebar - Now wider with more content */}
+        <aside className="w-full lg:w-80 bg-card/95 backdrop-blur-sm border-r border-border p-5 lg:min-h-[calc(100vh-3.5rem)] lg:overflow-y-auto custom-scrollbar">
+          <div className="lg:sticky lg:top-0 space-y-4">
+            {/* Controls Header */}
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold flex items-center gap-2 text-muted-foreground uppercase tracking-wide">
                 <Activity className="w-4 h-4 text-primary" />
@@ -199,93 +208,100 @@ export default function Dashboard() {
               <PushNotificationToggle variant="compact" />
             </div>
 
-            {/* Rainfall Slider */}
-            <div className="control-panel">
-              <div className="flex items-center justify-between">
-                <label className="control-label">
-                  <CloudRain className="w-4 h-4 text-primary" />
-                  Rainfall Intensity
-                </label>
-                <span className="control-value">{rainfall} mm</span>
-              </div>
-              <Slider
-                value={[rainfall]}
-                onValueChange={(v) => setRainfall(v[0])}
-                max={150}
-                step={1}
-                className="mt-1"
-              />
-              <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                <span>0 mm</span>
-                <span>150 mm</span>
-              </div>
-            </div>
+            {/* Risk Gauge - NEW prominent widget */}
+            <RiskGauge 
+              riskLevel={riskLevel} 
+              probability={prediction?.probability || Math.round((rainfall / 150) * 50 + (waterLevel / 10) * 50)}
+            />
 
-            {/* Water Level Slider */}
-            <div className="control-panel">
-              <div className="flex items-center justify-between">
-                <label className="control-label">
-                  <Waves className="w-4 h-4 text-primary" />
-                  River Water Level
-                </label>
-                <span className="control-value">{waterLevel.toFixed(1)} m</span>
-              </div>
-              <Slider
-                value={[waterLevel]}
-                onValueChange={(v) => setWaterLevel(v[0])}
-                max={10}
-                step={0.1}
-                className="mt-1"
-              />
-              <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                <span>0 m</span>
-                <span>10 m</span>
-              </div>
-            </div>
-
-            {/* Humidity Slider */}
-            <div className="control-panel">
-              <div className="flex items-center justify-between">
-                <label className="control-label">
-                  <Gauge className="w-4 h-4 text-primary" />
-                  Humidity
-                </label>
-                <span className="control-value">{humidity.toFixed(0)}%</span>
-              </div>
-              <Slider
-                value={[humidity]}
-                onValueChange={(v) => setHumidity(v[0])}
-                max={100}
-                step={1}
-                className="mt-1"
-              />
-              <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                <span>0%</span>
-                <span>100%</span>
-              </div>
-            </div>
-
-            {/* Quick Stats */}
-            <div className="space-y-2">
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                Sensor Readings
+            {/* Sensor Controls in Collapsible Grid */}
+            <div className="pro-card p-4 space-y-3">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                <Gauge className="w-3.5 h-3.5 text-primary" />
+                Sensor Simulation
               </h3>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="stat-card p-3 text-center">
-                  <ThermometerSun className="w-4 h-4 mx-auto mb-1 text-risk-medium" />
-                  <div className="text-base font-bold">{soilMoisture.toFixed(0)}%</div>
-                  <div className="text-xs text-muted-foreground">Soil Moisture</div>
+              
+              {/* Rainfall Slider */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-medium flex items-center gap-1.5">
+                    <CloudRain className="w-3.5 h-3.5 text-primary" />
+                    Rainfall
+                  </label>
+                  <span className="text-xs font-mono font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">{rainfall} mm</span>
                 </div>
-                <div className="stat-card p-3 text-center">
+                <Slider
+                  value={[rainfall]}
+                  onValueChange={(v) => setRainfall(v[0])}
+                  max={150}
+                  step={1}
+                />
+              </div>
+
+              {/* Water Level Slider */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-medium flex items-center gap-1.5">
+                    <Waves className="w-3.5 h-3.5 text-primary" />
+                    River Level
+                  </label>
+                  <span className="text-xs font-mono font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">{waterLevel.toFixed(1)} m</span>
+                </div>
+                <Slider
+                  value={[waterLevel]}
+                  onValueChange={(v) => setWaterLevel(v[0])}
+                  max={10}
+                  step={0.1}
+                />
+              </div>
+
+              {/* Humidity Slider */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-medium flex items-center gap-1.5">
+                    <Gauge className="w-3.5 h-3.5 text-primary" />
+                    Humidity
+                  </label>
+                  <span className="text-xs font-mono font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">{humidity.toFixed(0)}%</span>
+                </div>
+                <Slider
+                  value={[humidity]}
+                  onValueChange={(v) => setHumidity(v[0])}
+                  max={100}
+                  step={1}
+                />
+              </div>
+
+              {/* Quick Stats Grid */}
+              <div className="grid grid-cols-2 gap-2 pt-2">
+                <div className="text-center p-2.5 rounded-lg bg-muted/40">
+                  <ThermometerSun className="w-4 h-4 mx-auto mb-1 text-risk-medium" />
+                  <div className="text-sm font-bold">{soilMoisture.toFixed(0)}%</div>
+                  <div className="text-[10px] text-muted-foreground">Soil Moisture</div>
+                </div>
+                <div className="text-center p-2.5 rounded-lg bg-muted/40">
                   <Mountain className="w-4 h-4 mx-auto mb-1 text-primary" />
-                  <div className="text-base font-bold">{elevation}m</div>
-                  <div className="text-xs text-muted-foreground">Elevation</div>
+                  <div className="text-sm font-bold">{elevation}m</div>
+                  <div className="text-[10px] text-muted-foreground">Elevation</div>
                 </div>
               </div>
             </div>
+
+            {/* Quick Insights - NEW */}
+            <QuickInsights 
+              rainfall={rainfall} 
+              waterLevel={waterLevel} 
+              humidity={humidity} 
+            />
 
             {/* Nearby Alerts */}
             <LocationBasedAlerts maxAlerts={2} maxDistance={50} />
+
+            {/* System Status Mini - NEW */}
+            <SystemStatusMini />
+
+            {/* Engagement Stats - NEW gamification */}
+            <EngagementStats />
           </div>
         </aside>
 
@@ -308,11 +324,19 @@ export default function Dashboard() {
                 Real-time flood risk assessment • Updated: {lastRefresh.toLocaleTimeString()}
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {(criticalCount > 0 || highCount > 0) && (
                 <div className="px-2.5 py-1 rounded-lg bg-risk-critical/10 text-risk-critical text-xs font-medium animate-pulse">
                   {criticalCount + highCount} Active Warnings
                 </div>
+              )}
+              {prediction && (
+                <ExportDropdown
+                  onExportCSV={() => exportPredictionToCSV(prediction, hasLocation ? `${latitude?.toFixed(4)}, ${longitude?.toFixed(4)}` : 'Ahmedabad, Gujarat')}
+                  onExportPDF={() => exportPredictionToPDF(prediction, hasLocation ? `${latitude?.toFixed(4)}, ${longitude?.toFixed(4)}` : 'Ahmedabad, Gujarat')}
+                  label="Export"
+                  size="sm"
+                />
               )}
               <Button
                 variant="outline"
@@ -505,8 +529,8 @@ export default function Dashboard() {
             </Tabs>
           </div>
 
-          {/* System Health & Recent Alerts Grid */}
-          <div className="grid lg:grid-cols-2 gap-5">
+          {/* System Health, Alerts & Live Feed Grid */}
+          <div className="grid lg:grid-cols-3 gap-5">
             {/* System Health Check */}
             <SystemHealthCheck />
 
@@ -518,8 +542,8 @@ export default function Dashboard() {
                 </div>
                 <h3 className="section-title">Recent System Alerts</h3>
               </div>
-              <div className="space-y-2">
-                {alerts.slice(0, 5).map((alert) => (
+              <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
+                {alerts.slice(0, 6).map((alert) => (
                   <div
                     key={alert.id}
                     className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/40 hover:bg-muted/60 transition-colors"
@@ -556,6 +580,9 @@ export default function Dashboard() {
                 )}
               </div>
             </div>
+
+            {/* Live Data Feed - NEW */}
+            <LiveDataFeed />
           </div>
         </main>
       </div>
