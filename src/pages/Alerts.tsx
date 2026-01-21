@@ -1,10 +1,12 @@
-import { AlertTriangle, Bell, Shield, Zap, Radio, RefreshCw, MapPin, Navigation } from "lucide-react";
+import { AlertTriangle, Bell, Shield, Zap, Radio, RefreshCw, MapPin, Navigation, Download } from "lucide-react";
 import { useFloodAlerts } from "@/hooks/useFloodAlerts";
 import { AlertCard } from "@/components/AlertCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PushNotificationToggle } from "@/components/PushNotificationToggle";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { Button } from "@/components/ui/button";
+import { ExportDropdown } from "@/components/ExportDropdown";
+import { exportAlertsToCSV, exportAlertsToPDF } from "@/lib/exportUtils";
 
 export default function Alerts() {
   const { alerts, isLoading, error, criticalCount, highCount, totalCount } = useFloodAlerts();
@@ -57,12 +59,22 @@ export default function Alerts() {
               </div>
             </div>
             
-            {!hasLocation && (
-              <Button variant="outline" size="sm" onClick={refetchLocation} className="gap-2">
-                <Navigation className="w-4 h-4" />
-                Enable Location
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {alerts.length > 0 && (
+                <ExportDropdown
+                  onExportCSV={() => exportAlertsToCSV(alerts)}
+                  onExportPDF={() => exportAlertsToPDF(alerts)}
+                  label="Export"
+                  size="sm"
+                />
+              )}
+              {!hasLocation && (
+                <Button variant="outline" size="sm" onClick={refetchLocation} className="gap-2">
+                  <Navigation className="w-4 h-4" />
+                  Enable Location
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Push Notifications */}
