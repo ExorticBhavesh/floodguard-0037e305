@@ -8,6 +8,7 @@ import { AnimatedAvatar } from "@/components/chat/AnimatedAvatar";
 import { VoiceSettings } from "@/components/chat/VoiceSettings";
 import { useFloodChat } from "@/hooks/useFloodChat";
 import { useTTS } from "@/hooks/useTTS";
+import { AnimatedBackground } from "@/components/AnimatedBackground";
 
 export default function Chatbot() {
   const { messages, isLoading, sendMessage, clearMessages } = useFloodChat();
@@ -70,13 +71,7 @@ export default function Chatbot() {
 
   return (
     <div className="min-h-screen pt-20 pb-8 relative overflow-hidden">
-      {/* Animated Background Effects */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-hero" />
-        <div className="absolute top-20 right-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] animate-pulse-slow" />
-        <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-primary/10 rounded-full blur-[80px] animate-float" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/3 rounded-full blur-[120px]" />
-      </div>
+      <AnimatedBackground variant="chat" />
 
       <div className="container mx-auto px-4 relative z-10 h-[calc(100vh-6rem)] flex flex-col">
         {/* Header */}

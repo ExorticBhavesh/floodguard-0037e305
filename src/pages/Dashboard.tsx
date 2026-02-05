@@ -52,6 +52,7 @@ import { SystemStatusMini } from "@/components/dashboard/SystemStatusMini";
 import { EngagementStats } from "@/components/dashboard/EngagementStats";
 import { ExportDropdown } from "@/components/ExportDropdown";
 import { exportPredictionToCSV, exportPredictionToPDF } from "@/lib/exportUtils";
+import { AnimatedBackground } from "@/components/AnimatedBackground";
 
 type RiskLevel = "low" | "medium" | "high" | "critical";
 
@@ -185,15 +186,14 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen pt-14 relative overflow-hidden">
-      {/* Subtle Background */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-hero" />
-        <div className="absolute top-20 right-0 w-[400px] h-[400px] bg-primary/3 rounded-full blur-[150px]" />
-        <div className="absolute bottom-0 left-1/4 w-[350px] h-[350px] bg-primary/5 rounded-full blur-[120px]" />
-        {riskLevel === "critical" && (
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-risk-critical/3 rounded-full blur-[180px] animate-pulse" />
-        )}
-      </div>
+      <AnimatedBackground variant="dashboard" />
+      
+      {/* Critical risk overlay */}
+      {riskLevel === "critical" && (
+        <div className="fixed inset-0 pointer-events-none z-0">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-risk-critical/10 rounded-full blur-[180px] animate-pulse" />
+        </div>
+      )}
 
       <div className="flex flex-col lg:flex-row relative z-10">
         {/* Sidebar - Now wider with more content */}

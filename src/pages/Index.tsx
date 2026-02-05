@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useFloodAlerts } from "@/hooks/useFloodAlerts";
 import { AlertCard } from "@/components/AlertCard";
 import { PushNotificationToggle } from "@/components/PushNotificationToggle";
-import { HeroBackground } from "@/components/home/HeroBackground";
+import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { LiveStatusBadge } from "@/components/home/LiveStatusBadge";
 import { HeroStats } from "@/components/home/HeroStats";
 import { FeatureSteps } from "@/components/home/FeatureSteps";
@@ -28,7 +28,7 @@ export default function Index() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      <HeroBackground />
+      <AnimatedBackground variant="hero" />
 
       {/* Hero Section */}
       <section className="relative pt-28 pb-20 sm:pt-36 sm:pb-28">

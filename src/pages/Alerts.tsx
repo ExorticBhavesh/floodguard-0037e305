@@ -7,6 +7,7 @@ import { useGeolocation } from "@/hooks/useGeolocation";
 import { Button } from "@/components/ui/button";
 import { ExportDropdown } from "@/components/ExportDropdown";
 import { exportAlertsToCSV, exportAlertsToPDF } from "@/lib/exportUtils";
+import { AnimatedBackground } from "@/components/AnimatedBackground";
 
 export default function Alerts() {
   const { alerts, isLoading, error, criticalCount, highCount, totalCount } = useFloodAlerts();
@@ -14,12 +15,7 @@ export default function Alerts() {
 
   return (
     <div className="min-h-screen pt-16 pb-12 relative overflow-hidden">
-      {/* Subtle Background */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-hero" />
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-risk-critical/3 rounded-full blur-[180px]" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[150px]" />
-      </div>
+      <AnimatedBackground variant="alerts" />
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
