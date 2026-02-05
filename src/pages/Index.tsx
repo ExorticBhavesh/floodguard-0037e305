@@ -25,13 +25,10 @@ import { Footer } from "@/components/home/Footer";
 export default function Index() {
   const { alerts, criticalCount, highCount, totalCount, isLoading } = useFloodAlerts();
   const urgentAlerts = alerts.filter(a => a.severity === "critical" || a.severity === "high").slice(0, 2);
-  
-  const hasActiveWarning = criticalCount > 0 || highCount > 0;
-  const warningLevel = criticalCount > 0 ? "critical" : highCount > 0 ? "high" : totalCount > 0 ? "medium" : "low";
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      <AnimatedBackground variant="hero" isWarningActive={hasActiveWarning} warningLevel={warningLevel as any} />
+      <AnimatedBackground variant="hero" />
 
       {/* Hero Section */}
       <section className="relative pt-28 pb-20 sm:pt-36 sm:pb-28">
