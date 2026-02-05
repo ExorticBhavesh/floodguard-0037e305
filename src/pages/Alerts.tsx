@@ -12,10 +12,13 @@ import { AnimatedBackground } from "@/components/AnimatedBackground";
 export default function Alerts() {
   const { alerts, isLoading, error, criticalCount, highCount, totalCount } = useFloodAlerts();
   const { locationName, hasLocation, refetch: refetchLocation } = useGeolocation();
+  
+  const hasActiveWarning = criticalCount > 0 || highCount > 0;
+  const warningLevel = criticalCount > 0 ? "critical" : highCount > 0 ? "high" : totalCount > 0 ? "medium" : "low";
 
   return (
     <div className="min-h-screen pt-16 pb-12 relative overflow-hidden">
-      <AnimatedBackground variant="alerts" />
+      <AnimatedBackground variant="alerts" isWarningActive={hasActiveWarning} warningLevel={warningLevel as any} />
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}

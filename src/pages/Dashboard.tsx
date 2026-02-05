@@ -183,17 +183,15 @@ export default function Dashboard() {
       description: "All sensors and predictions updated",
     });
   }, [refetchAlerts]);
+  const hasActiveWarning = criticalCount > 0 || highCount > 0;
 
   return (
     <div className="min-h-screen pt-14 relative overflow-hidden">
-      <AnimatedBackground variant="dashboard" />
-      
-      {/* Critical risk overlay */}
-      {riskLevel === "critical" && (
-        <div className="fixed inset-0 pointer-events-none z-0">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-risk-critical/10 rounded-full blur-[180px] animate-pulse" />
-        </div>
-      )}
+      <AnimatedBackground 
+        variant="dashboard" 
+        isWarningActive={hasActiveWarning} 
+        warningLevel={riskLevel} 
+      />
 
       <div className="flex flex-col lg:flex-row relative z-10">
         {/* Sidebar - Now wider with more content */}
