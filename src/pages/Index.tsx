@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { 
-  Droplets, 
   AlertTriangle, 
   ArrowRight,
   LayoutDashboard,
@@ -9,7 +8,8 @@ import {
   Sparkles,
   Shield,
   Cpu,
-  Satellite
+  Satellite,
+  Map
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFloodAlerts } from "@/hooks/useFloodAlerts";

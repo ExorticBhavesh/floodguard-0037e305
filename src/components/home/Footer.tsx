@@ -10,8 +10,8 @@ export function Footer() {
         <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
           {/* Brand */}
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-lg">
-              <Droplets className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 rounded-xl overflow-hidden shadow-lg">
+              <img src="/images/floodguard-logo.jpg" alt="FloodGuard" className="w-full h-full object-cover" />
             </div>
             <div>
               <div className="font-bold text-lg">

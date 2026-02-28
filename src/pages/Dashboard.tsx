@@ -53,6 +53,7 @@ import { EngagementStats } from "@/components/dashboard/EngagementStats";
 import { ExportDropdown } from "@/components/ExportDropdown";
 import { exportPredictionToCSV, exportPredictionToPDF } from "@/lib/exportUtils";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
+import { WardReadinessScores } from "@/components/dashboard/WardReadinessScores";
 
 type RiskLevel = "low" | "medium" | "high" | "critical";
 
@@ -527,6 +528,11 @@ export default function Dashboard() {
                 </div>
               </TabsContent>
             </Tabs>
+          </div>
+
+          {/* Ward Readiness Scores */}
+          <div className="mb-5">
+            <WardReadinessScores />
           </div>
 
           {/* System Health, Alerts & Live Feed Grid */}
