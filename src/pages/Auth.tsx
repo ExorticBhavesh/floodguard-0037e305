@@ -64,11 +64,15 @@ export default function Auth() {
   };
 
   const handleGoogleSignIn = async () => {
-    const { error } = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (error) {
-      toast.error("Google sign-in failed");
+    try {
+      const { error } = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (error) {
+        toast.error("Google sign-in failed: " + error.message);
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Google sign-in failed");
     }
   };
 
