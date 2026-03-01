@@ -14,7 +14,7 @@ export default function Alerts() {
   const { locationName, hasLocation, refetch: refetchLocation } = useGeolocation();
 
   return (
-    <div className="min-h-screen pt-20 pb-12 relative overflow-hidden">
+    <div className="min-h-screen pt-16 pb-12 relative overflow-hidden">
       <AnimatedBackground variant="alerts" />
 
       <div className="container mx-auto px-4 relative z-10">
@@ -22,9 +22,9 @@ export default function Alerts() {
         <div className="max-w-3xl mx-auto mb-8">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
-                <div className="relative">
-                <div className="w-14 h-14 rounded-2xl bg-risk-high/10 flex items-center justify-center">
-                  <Bell className="w-7 h-7 text-risk-high" />
+              <div className="relative">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-risk-critical to-risk-high flex items-center justify-center shadow-md">
+                  <Bell className="w-7 h-7 text-white" />
                 </div>
                 {criticalCount > 0 && (
                   <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-risk-critical text-white text-xs font-bold flex items-center justify-center animate-pulse shadow-sm">

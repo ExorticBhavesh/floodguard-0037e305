@@ -1,73 +1,100 @@
-import { Radio, Zap, BellRing, Map, ArrowRight } from "lucide-react";
+import { Radio, Zap, BellRing, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface FeatureCard {
+interface Step {
+  number: number;
   title: string;
   description: string;
   icon: React.ElementType;
+  gradient: string;
+  shadowColor: string;
 }
 
-const features: FeatureCard[] = [
+const steps: Step[] = [
   {
-    title: "AI Flood Prediction",
-    description: "Advanced ML models analyze weather patterns, historical data, and sensor readings to predict flood risks with 94% accuracy.",
-    icon: Zap,
-  },
-  {
-    title: "Pre-Monsoon Readiness",
-    description: "Ward-level readiness scores help local authorities prepare infrastructure and emergency resources before monsoon season.",
+    number: 1,
+    title: "Monitor",
+    description: "Real-time data collection from weather sensors, water level gauges, and satellite imagery across the region",
     icon: Radio,
+    gradient: "from-primary to-primary-dark",
+    shadowColor: "shadow-primary/20",
   },
   {
-    title: "Live GIS Flood Maps",
-    description: "Interactive maps with real-time flood zone visualization, elevation analysis, and LiDAR-based terrain modeling.",
-    icon: Map,
+    number: 2,
+    title: "Predict",
+    description: "Advanced ML models analyze patterns, historical data, and meteorological conditions to forecast flood risks",
+    icon: Zap,
+    gradient: "from-risk-medium to-amber-600",
+    shadowColor: "shadow-risk-medium/20",
   },
   {
-    title: "Early Warning Alerts",
-    description: "Instant push notifications and SMS alerts to authorities and communities in at-risk zones within seconds.",
+    number: 3,
+    title: "Alert",
+    description: "Instant push notifications and SMS alerts to authorities and communities in at-risk zones within seconds",
     icon: BellRing,
+    gradient: "from-risk-high to-red-600",
+    shadowColor: "shadow-risk-high/20",
   },
 ];
 
 export function FeatureSteps() {
   return (
-    <section className="py-24 relative z-10">
+    <section className="py-20 relative z-10">
       <div className="container mx-auto px-4">
         {/* Section Header */}
-        <div className="text-center mb-16">
-          <p className="text-accent text-sm font-semibold tracking-wider uppercase mb-4">
+        <div className="text-center mb-14">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-4">
+            <Zap className="w-4 h-4" />
             How It Works
-          </p>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-5 tracking-tight">
-            Built for{" "}
-            <span className="gradient-text">Community Safety</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 tracking-tight">
+            Three Steps to{" "}
+            <span className="gradient-text">Safer Communities</span>
           </h2>
-          <p className="text-muted-foreground max-w-xl mx-auto text-lg leading-relaxed">
-            Our AI system continuously monitors, predicts, and alerts to keep communities protected.
+          <p className="text-muted-foreground max-w-xl mx-auto text-lg">
+            Our AI system continuously monitors, predicts, and alerts to keep communities protected
           </p>
         </div>
         
-        {/* Feature Cards Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-          {features.map((feature, index) => (
+        {/* Steps Grid */}
+        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          {steps.map((step, index) => (
             <div 
-              key={feature.title}
-              className="group p-7 rounded-2xl bg-card border border-border/40 hover:border-accent/20 hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+              key={step.number}
+              className="group relative"
             >
-              {/* Icon */}
-              <div className="w-12 h-12 rounded-2xl bg-accent/8 flex items-center justify-center mb-5">
-                <feature.icon className="w-6 h-6 text-accent" />
-              </div>
+              {/* Connector line */}
+              {index < steps.length - 1 && (
+                <div className="hidden md:block absolute top-14 left-[60%] w-[80%] h-px bg-gradient-to-r from-border via-primary/30 to-border" />
+              )}
               
-              {/* Content */}
-              <h3 className="text-lg font-bold mb-2">{feature.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
-              
-              {/* Hover arrow */}
-              <div className="mt-5 flex items-center gap-1 text-sm font-medium text-accent opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                Learn more
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <div className="relative p-6 rounded-2xl bg-card border border-border hover:border-primary/30 shadow-card hover:shadow-lg transition-all duration-300 group-hover:-translate-y-1">
+                {/* Step number badge */}
+                <div className={cn(
+                  "absolute -top-3 left-6 px-4 py-1.5 rounded-lg text-white text-xs font-bold shadow-lg bg-gradient-to-r",
+                  step.gradient,
+                  step.shadowColor
+                )}>
+                  Step {step.number}
+                </div>
+                
+                {/* Icon */}
+                <div className={cn(
+                  "w-14 h-14 rounded-2xl flex items-center justify-center mb-5 mt-4 shadow-md bg-gradient-to-br",
+                  step.gradient
+                )}>
+                  <step.icon className="w-7 h-7 text-white" />
+                </div>
+                
+                {/* Content */}
+                <h3 className="text-xl font-bold mb-2">{step.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
+                
+                {/* Hover arrow */}
+                <div className="mt-4 flex items-center gap-1 text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                  Learn more
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </div>
               </div>
             </div>
           ))}

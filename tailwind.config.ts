@@ -84,7 +84,6 @@ export default {
         sm: "calc(var(--radius) - 4px)",
         xl: "calc(var(--radius) + 4px)",
         "2xl": "calc(var(--radius) + 8px)",
-        "3xl": "calc(var(--radius) + 16px)",
       },
       boxShadow: {
         xs: "var(--shadow-xs)",
@@ -128,9 +127,9 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        shimmer: "shimmer 2.5s linear infinite",
+        shimmer: "shimmer 2s linear infinite",
         "fade-in": "fade-in 0.4s ease-out",
-        "scale-in": "scale-in 0.3s ease-out",
+        "scale-in": "scale-in 0.25s ease-out",
       },
       transitionDuration: {
         "250": "250ms",

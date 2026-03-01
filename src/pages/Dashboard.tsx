@@ -186,19 +186,19 @@ export default function Dashboard() {
   }, [refetchAlerts]);
 
   return (
-    <div className="min-h-screen pt-16 relative overflow-hidden">
+    <div className="min-h-screen pt-14 relative overflow-hidden">
       <AnimatedBackground variant="dashboard" />
       
       {/* Critical risk overlay */}
       {riskLevel === "critical" && (
         <div className="fixed inset-0 pointer-events-none z-0">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-risk-critical/8 rounded-full blur-[180px] animate-pulse" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-risk-critical/10 rounded-full blur-[180px] animate-pulse" />
         </div>
       )}
 
       <div className="flex flex-col lg:flex-row relative z-10">
-        {/* Sidebar */}
-        <aside className="w-full lg:w-80 bg-card/95 backdrop-blur-sm border-r border-border/40 p-5 lg:min-h-[calc(100vh-4rem)] lg:overflow-y-auto custom-scrollbar">
+        {/* Sidebar - Now wider with more content */}
+        <aside className="w-full lg:w-80 bg-card/95 backdrop-blur-sm border-r border-border p-5 lg:min-h-[calc(100vh-3.5rem)] lg:overflow-y-auto custom-scrollbar">
           <div className="lg:sticky lg:top-0 space-y-4">
             {/* Controls Header */}
             <div className="flex items-center justify-between">
@@ -307,7 +307,7 @@ export default function Dashboard() {
         </aside>
 
         {/* Main Dashboard Area */}
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-5">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
             <div>
