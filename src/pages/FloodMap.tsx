@@ -85,12 +85,12 @@ export default function FloodMapPage() {
   ];
 
   return (
-    <div className="min-h-screen pt-14 relative overflow-hidden">
+    <div className="min-h-screen pt-16 relative overflow-hidden">
       <AnimatedBackground variant="dashboard" />
 
-      <div className="relative z-10 h-[calc(100vh-3.5rem)] flex flex-col">
+      <div className="relative z-10 h-[calc(100vh-4rem)] flex flex-col">
         {/* Header */}
-        <div className="px-4 py-3 bg-card/95 backdrop-blur-sm border-b border-border flex items-center justify-between">
+        <div className="px-4 py-3 bg-card/95 backdrop-blur-sm border-b border-border/40 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-gradient-primary shadow-sm">
               <Map className="w-5 h-5 text-primary-foreground" />
@@ -159,7 +159,7 @@ export default function FloodMapPage() {
           </MapContainer>
 
           {/* Legend */}
-          <div className="absolute bottom-4 left-4 p-3 bg-card/95 backdrop-blur-sm rounded-xl border border-border shadow-lg z-[1000]">
+          <div className="absolute bottom-4 left-4 p-4 bg-card/95 backdrop-blur-sm rounded-2xl border border-border/40 shadow-lg z-[1000]">
             <p className="text-xs font-semibold mb-2">Risk Legend</p>
             <div className="space-y-1.5">
               {[
@@ -177,7 +177,7 @@ export default function FloodMapPage() {
 
           {/* Selected Zone Detail Panel */}
           {selectedZone && (
-            <div className="absolute top-4 right-4 w-80 p-5 bg-card/95 backdrop-blur-sm rounded-xl border border-border shadow-xl z-[1000] animate-slide-up">
+            <div className="absolute top-4 right-4 w-80 p-5 bg-card/95 backdrop-blur-sm rounded-2xl border border-border/40 shadow-xl z-[1000] animate-slide-up">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-bold text-base">{selectedZone.name}</h3>
                 <button onClick={() => setSelectedZone(null)} className="text-muted-foreground hover:text-foreground">
