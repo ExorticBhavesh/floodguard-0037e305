@@ -70,7 +70,7 @@ export default function Chatbot() {
   const hasMessages = messages.length > 0;
 
   return (
-    <div className="min-h-screen pt-20 pb-8 relative overflow-hidden">
+    <div className="min-h-screen pt-20 pb-8 relative overflow-hidden scroll-smooth">
       <AnimatedBackground variant="chat" />
 
       <div className="container mx-auto px-4 relative z-10 h-[calc(100vh-6rem)] flex flex-col">
@@ -137,7 +137,7 @@ export default function Chatbot() {
         </div>
 
         {/* Chat Area */}
-        <div className="flex-1 flex flex-col bg-card/50 backdrop-blur-sm rounded-3xl border border-border overflow-hidden shadow-lg">
+        <div className="flex-1 flex flex-col bg-card/50 backdrop-blur-sm rounded-3xl border border-border/40 overflow-hidden shadow-lg">
           {/* Messages Container */}
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
             {!hasMessages ? (

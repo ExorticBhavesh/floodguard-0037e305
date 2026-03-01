@@ -5,11 +5,10 @@ import {
   LayoutDashboard,
   Bot,
   ChevronRight,
-  Sparkles,
   Shield,
   Cpu,
   Satellite,
-  Map
+  Bell
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFloodAlerts } from "@/hooks/useFloodAlerts";
@@ -31,35 +30,25 @@ export default function Index() {
       <AnimatedBackground variant="hero" />
 
       {/* Hero Section */}
-      <section className="relative pt-28 pb-20 sm:pt-36 sm:pb-28">
+      <section className="relative pt-32 pb-24 sm:pt-40 sm:pb-32">
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto">
             {/* Live Status Badge */}
             <LiveStatusBadge totalAlerts={totalCount} />
             
             {/* Main Title */}
-            <div className="text-center mb-12">
-              {/* Eyebrow */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-6 animate-fade-in">
-                <Sparkles className="w-4 h-4" />
-                AI-Powered Flood Monitoring
-              </div>
-              
-              <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold mb-6 animate-slide-up leading-[1.1] tracking-tight">
-                Real-Time{" "}
-                <span className="relative inline-block">
-                  <span className="gradient-text">Flood Alert</span>
-                  <svg className="absolute -bottom-2 left-0 w-full h-3 text-primary/20" viewBox="0 0 200 12" preserveAspectRatio="none">
-                    <path d="M0,8 Q50,0 100,8 T200,8" fill="none" stroke="currentColor" strokeWidth="3" />
-                  </svg>
-                </span>
+            <div className="text-center mb-16">
+              <h1 className="text-5xl sm:text-6xl lg:text-8xl font-bold mb-8 animate-slide-up leading-[1.05] tracking-tight">
+                Predict.{" "}
+                <span className="gradient-text">Prepare.</span>
                 <br />
-                <span className="text-foreground">Prediction System</span>
+                Protect.
               </h1>
               
-              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 animate-slide-up leading-relaxed" style={{ animationDelay: "0.1s" }}>
-                Protecting communities with advanced machine learning, real-time sensor data, and{" "}
-                <span className="text-foreground font-medium">instant emergency alerts</span>.
+              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-12 animate-slide-up leading-relaxed" style={{ animationDelay: "0.1s" }}>
+                AI-powered flood monitoring system that safeguards communities with{" "}
+                <span className="text-foreground font-medium">real-time predictions</span>{" "}
+                and instant emergency alerts.
               </p>
               
               {/* CTA Buttons */}
@@ -67,11 +56,11 @@ export default function Index() {
                 <Button 
                   asChild 
                   size="lg" 
-                  className="gap-2 px-8 h-14 text-base bg-gradient-to-r from-primary to-primary-dark hover:opacity-90 transition-all shadow-lg shadow-primary/25 rounded-2xl group"
+                  className="gap-2 px-10 h-14 text-base rounded-2xl group"
                 >
                   <Link to="/dashboard">
                     <LayoutDashboard className="w-5 h-5" />
-                    Open Live Dashboard
+                    View Flood Risk
                     <ChevronRight className="w-4 h-4 -mr-1 group-hover:translate-x-0.5 transition-transform" />
                   </Link>
                 </Button>
@@ -79,24 +68,24 @@ export default function Index() {
                   asChild 
                   size="lg" 
                   variant="outline" 
-                  className="gap-2 px-8 h-14 text-base rounded-2xl hover:bg-primary/5 border-border/60 group"
+                  className="gap-2 px-10 h-14 text-base rounded-2xl group"
                 >
-                  <Link to="/chatbot">
-                    <Bot className="w-5 h-5" />
-                    AI Safety Assistant
+                  <Link to="/alerts">
+                    <Bell className="w-5 h-5" />
+                    Get Alerts
                   </Link>
                 </Button>
               </div>
               
               {/* Trust badges */}
-              <div className="flex items-center justify-center gap-6 mt-10 animate-fade-in" style={{ animationDelay: "0.4s" }}>
+              <div className="flex items-center justify-center gap-8 mt-12 animate-fade-in" style={{ animationDelay: "0.4s" }}>
                 {[
                   { icon: Satellite, label: "Satellite Data" },
                   { icon: Cpu, label: "ML Powered" },
                   { icon: Shield, label: "24/7 Monitoring" },
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <item.icon className="w-4 h-4 text-primary/70" />
+                    <item.icon className="w-4 h-4 text-accent" />
                     <span>{item.label}</span>
                   </div>
                 ))}
@@ -126,8 +115,8 @@ export default function Index() {
               {/* Section Header */}
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-risk-critical to-risk-high flex items-center justify-center shadow-lg">
-                    <AlertTriangle className="w-6 h-6 text-white" />
+                  <div className="w-12 h-12 rounded-2xl bg-risk-high/10 flex items-center justify-center">
+                    <AlertTriangle className="w-6 h-6 text-risk-high" />
                   </div>
                   <div>
                     <h2 className="text-xl font-bold">Active Warnings</h2>

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
-import { Eye, EyeOff, Mail, Lock, User, Shield } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from "lucide-react";
 import { useAuthReady } from "@/hooks/useAuthReady";
 
 export default function Auth() {
@@ -20,16 +20,14 @@ export default function Auth() {
   const navigate = useNavigate();
   const { user, isReady } = useAuthReady();
 
-  // If already authenticated, redirect to dashboard immediately
   if (isReady && user) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Show loading while auth state is resolving
   if (!isReady) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -82,24 +80,24 @@ export default function Auth() {
 
       <div className="w-full max-w-md mx-4 relative z-10">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 mx-auto mb-4 rounded-2xl overflow-hidden shadow-xl border-2 border-primary/20">
+        <div className="text-center mb-10">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl overflow-hidden shadow-md">
             <img src="/images/floodguard-logo.jpg" alt="FloodGuard" className="w-full h-full object-cover" />
           </div>
-          <h1 className="text-3xl font-bold gradient-text">FloodGuard</h1>
-          <p className="text-muted-foreground mt-1">AI-Powered Flood Prediction System</p>
+          <h1 className="text-2xl font-bold">FloodGuard</h1>
+          <p className="text-muted-foreground text-sm mt-1">AI-Powered Flood Prediction System</p>
         </div>
 
         {/* Auth Card */}
-        <div className="pro-card p-8">
-          <h2 className="text-xl font-bold text-center mb-6">
+        <div className="bg-card rounded-3xl border border-border/40 shadow-lg p-8">
+          <h2 className="text-xl font-bold text-center mb-8">
             {isSignUp ? "Create Account" : "Welcome Back"}
           </h2>
 
           {/* Google Sign In */}
           <Button
             variant="outline"
-            className="w-full h-12 gap-3 mb-6 text-base"
+            className="w-full h-12 gap-3 mb-6 text-base rounded-xl"
             onClick={handleGoogleSignIn}
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -113,7 +111,7 @@ export default function Auth() {
 
           <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border" />
+              <div className="w-full border-t border-border/40" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-card px-3 text-muted-foreground">or</span>
@@ -125,13 +123,14 @@ export default function Auth() {
             {isSignUp && (
               <div className="space-y-2">
                 <Label htmlFor="name" className="flex items-center gap-2 text-sm">
-                  <User className="w-3.5 h-3.5" /> Full Name
+                  <User className="w-3.5 h-3.5 text-muted-foreground" /> Full Name
                 </Label>
                 <Input
                   id="name"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Enter your full name"
+                  className="h-11 rounded-xl"
                   required
                 />
               </div>
@@ -139,7 +138,7 @@ export default function Auth() {
 
             <div className="space-y-2">
               <Label htmlFor="email" className="flex items-center gap-2 text-sm">
-                <Mail className="w-3.5 h-3.5" /> Email
+                <Mail className="w-3.5 h-3.5 text-muted-foreground" /> Email
               </Label>
               <Input
                 id="email"
@@ -147,13 +146,14 @@ export default function Auth() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
+                className="h-11 rounded-xl"
                 required
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="password" className="flex items-center gap-2 text-sm">
-                <Lock className="w-3.5 h-3.5" /> Password
+                <Lock className="w-3.5 h-3.5 text-muted-foreground" /> Password
               </Label>
               <div className="relative">
                 <Input
@@ -162,22 +162,23 @@ export default function Auth() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
+                  className="h-11 rounded-xl"
                   required
                   minLength={6}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
 
-            <Button type="submit" className="w-full h-12 text-base gap-2" disabled={isLoading}>
-              <Shield className="w-4 h-4" />
+            <Button type="submit" className="w-full h-12 text-base gap-2 rounded-xl" disabled={isLoading}>
               {isLoading ? "Please wait..." : isSignUp ? "Create Account" : "Sign In"}
+              {!isLoading && <ArrowRight className="w-4 h-4" />}
             </Button>
           </form>
 
@@ -185,14 +186,14 @@ export default function Auth() {
             {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
             <button
               onClick={() => setIsSignUp(!isSignUp)}
-              className="text-primary font-medium hover:underline"
+              className="text-accent font-medium hover:underline"
             >
               {isSignUp ? "Sign In" : "Sign Up"}
             </button>
           </p>
         </div>
 
-        <p className="text-center text-xs text-muted-foreground mt-4">
+        <p className="text-center text-xs text-muted-foreground mt-6">
           By continuing, you agree to FloodGuard's Terms of Service
         </p>
       </div>
