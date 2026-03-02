@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { MeshDashboard } from "@/components/mesh/MeshDashboard";
 import {
   Droplets,
   CloudRain,
@@ -533,6 +534,11 @@ export default function Dashboard() {
           {/* Ward Readiness Scores */}
           <div className="mb-5">
             <WardReadinessScores />
+          </div>
+
+          {/* Mesh Network Panel */}
+          <div className="mb-5">
+            <MeshDashboard />
           </div>
 
           {/* System Health, Alerts & Live Feed Grid */}

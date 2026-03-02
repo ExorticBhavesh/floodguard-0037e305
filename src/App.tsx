@@ -2,12 +2,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import Splash from "./pages/Splash";
+import Onboarding from "./pages/Onboarding";
 import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import LocationPermission from "./pages/LocationPermission";
 import Dashboard from "./pages/Dashboard";
 import Alerts from "./pages/Alerts";
 import Chatbot from "./pages/Chatbot";
@@ -16,6 +15,12 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+function RequireProfile({ children }: { children: React.ReactNode }) {
+  const profile = localStorage.getItem("floodguard_profile");
+  if (!profile) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -23,14 +28,14 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/location-permission" element={<LocationPermission />} />
-          <Route path="/" element={<><Navbar /><Index /></>} />
-          <Route path="/dashboard" element={<ProtectedRoute><Navbar /><Dashboard /></ProtectedRoute>} />
-          <Route path="/alerts" element={<ProtectedRoute><Navbar /><Alerts /></ProtectedRoute>} />
-          <Route path="/chatbot" element={<ProtectedRoute><Navbar /><Chatbot /></ProtectedRoute>} />
-          <Route path="/flood-map" element={<ProtectedRoute><Navbar /><FloodMap /></ProtectedRoute>} />
-          <Route path="*" element={<><Navbar /><NotFound /></>} />
+          <Route path="/" element={<Splash />} />
+          <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/home" element={<RequireProfile><Navbar /><Index /></RequireProfile>} />
+          <Route path="/dashboard" element={<RequireProfile><Navbar /><Dashboard /></RequireProfile>} />
+          <Route path="/alerts" element={<RequireProfile><Navbar /><Alerts /></RequireProfile>} />
+          <Route path="/chatbot" element={<RequireProfile><Navbar /><Chatbot /></RequireProfile>} />
+          <Route path="/flood-map" element={<RequireProfile><Navbar /><FloodMap /></RequireProfile>} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

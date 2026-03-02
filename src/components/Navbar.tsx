@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, Bot, Bell, LayoutDashboard, Home, Map, LogOut } from "lucide-react";
+import { Menu, X, Bot, Bell, LayoutDashboard, Home, Map, LogOut, Radio } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AlertNotificationBell } from "./AlertNotificationBell";
-import { supabase } from "@/integrations/supabase/client";
+import { MeshStatusIndicator } from "./mesh/MeshStatusIndicator";
 import { toast } from "sonner";
 
 const navLinks = [
-  { name: "Home", path: "/", icon: Home },
+  { name: "Home", path: "/home", icon: Home },
   { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
   { name: "Flood Map", path: "/flood-map", icon: Map },
   { name: "Alerts", path: "/alerts", icon: Bell },
@@ -18,33 +18,37 @@ export function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user || null);
-    });
-    supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user || null));
-    return () => subscription.unsubscribe();
+    const stored = localStorage.getItem("floodguard_profile");
+    if (stored) setProfile(JSON.parse(stored));
   }, []);
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
+  const handleSignOut = () => {
+    localStorage.removeItem("floodguard_profile");
     toast.success("Signed out");
     navigate("/");
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass-surface border-b border-border/50">
+    <nav className="fixed top-0 left-0 right-0 z-50 glass-surface border-b border-border/30">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-lg overflow-hidden shadow-sm group-hover:shadow-glow transition-shadow duration-200">
+          <Link to="/dashboard" className="flex items-center gap-2.5 group">
+            <div className="w-9 h-9 rounded-xl overflow-hidden shadow-sm group-hover:shadow-glow transition-shadow duration-200 border border-primary/20">
               <img src="/images/floodguard-logo.jpg" alt="FloodGuard" className="w-full h-full object-cover" />
             </div>
-            <span className="font-bold text-base hidden sm:block">FloodGuard</span>
+            <span className="font-bold text-base hidden sm:block">
+              Flood<span className="text-primary">Guard</span>
+            </span>
           </Link>
+
+          {/* Mesh Status - center */}
+          <div className="hidden md:flex">
+            <MeshStatusIndicator isActive={true} nodeCount={6} mode="simulation" />
+          </div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-1">
@@ -54,14 +58,14 @@ export function Navbar() {
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
                     link.highlight
                       ? isActive
                         ? "bg-gradient-primary text-primary-foreground shadow-sm"
-                        : "bg-primary/8 text-primary hover:bg-primary/15"
+                        : "bg-primary/10 text-primary hover:bg-primary/20"
                       : isActive
                         ? "bg-primary/10 text-primary font-semibold"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                   }`}
                 >
                   <link.icon className="w-4 h-4" />
@@ -75,18 +79,13 @@ export function Navbar() {
           <div className="flex items-center gap-2">
             <AlertNotificationBell />
             
-            {user ? (
-              <Button variant="ghost" size="sm" onClick={handleSignOut} className="gap-1.5 text-xs hidden sm:flex">
+            {profile && (
+              <Button variant="ghost" size="sm" onClick={handleSignOut} className="gap-1.5 text-xs hidden sm:flex text-muted-foreground hover:text-foreground">
                 <LogOut className="w-3.5 h-3.5" />
                 Sign Out
               </Button>
-            ) : (
-              <Button asChild size="sm" className="h-8 text-xs">
-                <Link to="/auth">Sign In</Link>
-              </Button>
             )}
 
-            {/* Mobile Menu Button */}
             <Button
               variant="ghost"
               size="icon"
@@ -101,8 +100,13 @@ export function Navbar() {
 
       {/* Mobile Navigation */}
       {isOpen && (
-        <div className="md:hidden border-t border-border/50 glass-surface animate-fade-in">
+        <div className="md:hidden border-t border-border/30 glass-surface animate-fade-in">
           <div className="container mx-auto px-4 py-3 space-y-1">
+            {/* Mesh status in mobile */}
+            <div className="px-3 py-2 mb-2">
+              <MeshStatusIndicator isActive={true} nodeCount={6} mode="simulation" />
+            </div>
+
             {navLinks.map((link) => {
               const isActive = location.pathname === link.path;
               return (
@@ -110,14 +114,14 @@ export function Navbar() {
                   key={link.path}
                   to={link.path}
                   onClick={() => setIsOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                     link.highlight
                       ? isActive
                         ? "bg-gradient-primary text-primary-foreground"
-                        : "bg-primary/8 text-primary"
+                        : "bg-primary/10 text-primary"
                       : isActive
                         ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                   }`}
                 >
                   <link.icon className="w-4 h-4" />
@@ -125,10 +129,10 @@ export function Navbar() {
                 </Link>
               );
             })}
-            {user && (
+            {profile && (
               <button
                 onClick={() => { handleSignOut(); setIsOpen(false); }}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 w-full"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/40 w-full"
               >
                 <LogOut className="w-4 h-4" />
                 Sign Out
