@@ -30,27 +30,27 @@ export function AnimatedBackground({ variant = "hero" }: AnimatedBackgroundProps
     switch (variant) {
       case "dashboard":
         return {
-          primary: "hsl(200 98% 50% / 0.35)",
-          secondary: "hsl(152 82% 39% / 0.25)",
-          tertiary: "hsl(38 92% 50% / 0.2)",
+          primary: "hsl(170 100% 44% / 0.15)",
+          secondary: "hsl(152 82% 39% / 0.1)",
+          tertiary: "hsl(38 92% 50% / 0.08)",
         };
       case "alerts":
         return {
-          primary: "hsl(0 72% 51% / 0.25)",
-          secondary: "hsl(38 92% 50% / 0.3)",
-          tertiary: "hsl(200 98% 50% / 0.2)",
+          primary: "hsl(0 72% 51% / 0.12)",
+          secondary: "hsl(38 92% 50% / 0.1)",
+          tertiary: "hsl(170 100% 44% / 0.08)",
         };
       case "chat":
         return {
-          primary: "hsl(200 98% 50% / 0.3)",
-          secondary: "hsl(152 82% 39% / 0.25)",
-          tertiary: "hsl(280 70% 50% / 0.15)",
+          primary: "hsl(170 100% 44% / 0.12)",
+          secondary: "hsl(152 82% 39% / 0.1)",
+          tertiary: "hsl(280 70% 50% / 0.06)",
         };
       default:
         return {
-          primary: "hsl(200 98% 50% / 0.4)",
-          secondary: "hsl(200 80% 60% / 0.3)",
-          tertiary: "hsl(152 82% 39% / 0.25)",
+          primary: "hsl(170 100% 44% / 0.15)",
+          secondary: "hsl(170 80% 50% / 0.1)",
+          tertiary: "hsl(0 100% 60% / 0.05)",
         };
     }
   }, [variant]);

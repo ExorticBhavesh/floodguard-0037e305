@@ -14,8 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
-        display: ["Inter", "system-ui", "sans-serif"],
+        sans: ["Space Grotesk", "Inter", "system-ui", "sans-serif"],
+        display: ["Space Grotesk", "Inter", "system-ui", "sans-serif"],
         mono: ["JetBrains Mono", "monospace"],
       },
       colors: {
@@ -37,6 +37,10 @@ export default {
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
+        },
+        emergency: {
+          DEFAULT: "hsl(var(--emergency))",
+          foreground: "hsl(var(--emergency-foreground))",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",
@@ -101,6 +105,8 @@ export default {
         "gradient-primary": "var(--gradient-primary)",
         "gradient-water": "var(--gradient-water)",
         "gradient-surface": "var(--gradient-surface)",
+        "gradient-emergency": "var(--gradient-emergency)",
+        "gradient-glass": "var(--gradient-glass)",
       },
       keyframes: {
         "accordion-down": {
@@ -123,6 +129,18 @@ export default {
           "0%": { opacity: "0", transform: "scale(0.96)" },
           "100%": { opacity: "1", transform: "scale(1)" },
         },
+        "ripple": {
+          "0%": { transform: "scale(1)", opacity: "0.6" },
+          "100%": { transform: "scale(2.5)", opacity: "0" },
+        },
+        "signal": {
+          "0%": { transform: "scale(0.5)", opacity: "1" },
+          "100%": { transform: "scale(3)", opacity: "0" },
+        },
+        "glow-pulse": {
+          "0%, 100%": { boxShadow: "0 0 20px hsl(170 100% 44% / 0.2)" },
+          "50%": { boxShadow: "0 0 40px hsl(170 100% 44% / 0.4)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -130,6 +148,9 @@ export default {
         shimmer: "shimmer 2s linear infinite",
         "fade-in": "fade-in 0.4s ease-out",
         "scale-in": "scale-in 0.25s ease-out",
+        "ripple": "ripple 1.5s ease-out infinite",
+        "signal": "signal 2s ease-out infinite",
+        "glow-pulse": "glow-pulse 2s ease-in-out infinite",
       },
       transitionDuration: {
         "250": "250ms",
