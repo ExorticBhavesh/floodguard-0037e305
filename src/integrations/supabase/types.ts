@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_users: {
+        Row: {
+          city: string | null
+          created_at: string
+          emergency_contact: string | null
+          full_name: string
+          id: string
+          latitude: number | null
+          longitude: number | null
+          phone: string
+          updated_at: string
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          emergency_contact?: string | null
+          full_name: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          phone: string
+          updated_at?: string
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          emergency_contact?: string | null
+          full_name?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          phone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       flood_alerts: {
         Row: {
           created_at: string

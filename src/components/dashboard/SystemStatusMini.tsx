@@ -1,13 +1,6 @@
 import { useState, useEffect } from "react";
 import { 
-  Cpu, 
-  Wifi, 
-  Database, 
-  Cloud, 
-  CheckCircle2, 
-  AlertCircle,
-  Loader2,
-  Server
+  Cpu, Wifi, Database, Cloud, CheckCircle2, AlertCircle, Loader2, Server
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,25 +13,56 @@ interface ServiceStatus {
   uptime: number;
 }
 
+async function checkEndpoint(url: string): Promise<{ ok: boolean; latency: number }> {
+  const start = performance.now();
+  try {
+    const resp = await fetch(url, { method: "HEAD", signal: AbortSignal.timeout(5000) });
+    return { ok: resp.ok, latency: Math.round(performance.now() - start) };
+  } catch {
+    return { ok: false, latency: Math.round(performance.now() - start) };
+  }
+}
+
 export function SystemStatusMini() {
   const [services, setServices] = useState<ServiceStatus[]>([
     { id: "api", name: "API Gateway", icon: Server, status: "checking", uptime: 99.9 },
     { id: "ml", name: "ML Engine", icon: Cpu, status: "checking", uptime: 99.7 },
     { id: "db", name: "Database", icon: Database, status: "checking", uptime: 99.99 },
     { id: "weather", name: "Weather API", icon: Cloud, status: "checking", uptime: 98.5 },
+    { id: "mesh", name: "Mesh Network", icon: Wifi, status: "checking", uptime: 97.0 },
   ]);
 
   useEffect(() => {
-    // Simulate service checks
-    const timer = setTimeout(() => {
-      setServices(prev => prev.map(service => ({
-        ...service,
-        status: Math.random() > 0.1 ? "online" : "degraded",
-        latency: Math.floor(20 + Math.random() * 80),
-      })));
-    }, 1000);
+    const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+    
+    const checkServices = async () => {
+      const results = await Promise.allSettled([
+        checkEndpoint(`${SUPABASE_URL}/rest/v1/`),
+        checkEndpoint(`${SUPABASE_URL}/functions/v1/flood-predict`),
+        checkEndpoint(`${SUPABASE_URL}/rest/v1/flood_alerts?select=count&limit=1`),
+        checkEndpoint(`${SUPABASE_URL}/functions/v1/weather-alerts`),
+      ]);
 
-    return () => clearTimeout(timer);
+      setServices(prev => prev.map((service, i) => {
+        if (i >= results.length) {
+          // Mesh network - simulated
+          return { ...service, status: "online" as const, latency: 15 + Math.floor(Math.random() * 30) };
+        }
+        const result = results[i];
+        if (result.status === "fulfilled") {
+          return {
+            ...service,
+            status: result.value.ok ? "online" as const : "degraded" as const,
+            latency: result.value.latency,
+          };
+        }
+        return { ...service, status: "degraded" as const, latency: 999 };
+      }));
+    };
+
+    checkServices();
+    const interval = setInterval(checkServices, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const allOnline = services.every(s => s.status === "online");
@@ -46,68 +70,66 @@ export function SystemStatusMini() {
 
   const StatusIcon = ({ status }: { status: ServiceStatus["status"] }) => {
     switch (status) {
-      case "online":
-        return <CheckCircle2 className="w-3.5 h-3.5 text-risk-low" />;
-      case "degraded":
-        return <AlertCircle className="w-3.5 h-3.5 text-risk-medium" />;
-      case "offline":
-        return <AlertCircle className="w-3.5 h-3.5 text-risk-critical" />;
-      case "checking":
-        return <Loader2 className="w-3.5 h-3.5 text-muted-foreground animate-spin" />;
+      case "online": return <CheckCircle2 className="w-3 h-3 text-risk-low" />;
+      case "degraded": return <AlertCircle className="w-3 h-3 text-risk-medium" />;
+      case "offline": return <AlertCircle className="w-3 h-3 text-risk-critical" />;
+      case "checking": return <Loader2 className="w-3 h-3 text-muted-foreground animate-spin" />;
     }
   };
 
+  const StatusDot = ({ status }: { status: ServiceStatus["status"] }) => (
+    <span className={cn(
+      "w-2 h-2 rounded-full inline-block",
+      status === "online" && "bg-risk-low animate-pulse",
+      status === "degraded" && "bg-risk-medium animate-pulse",
+      status === "offline" && "bg-risk-critical animate-pulse",
+      status === "checking" && "bg-muted-foreground"
+    )} />
+  );
+
   return (
-    <div className="pro-card p-5">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+    <div className="pro-card p-4">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <div className="p-1.5 rounded-lg bg-primary/10">
-            <Wifi className="w-4 h-4 text-primary" />
+            <Wifi className="w-3.5 h-3.5 text-primary" />
           </div>
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            System Status
+            System Health
           </span>
         </div>
         <div className={cn(
-          "flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-full",
+          "flex items-center gap-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full",
           allOnline ? "bg-risk-low/10 text-risk-low" : someIssues ? "bg-risk-medium/10 text-risk-medium" : "bg-muted text-muted-foreground"
         )}>
-          <span className={cn(
-            "w-1.5 h-1.5 rounded-full",
-            allOnline ? "bg-risk-low" : someIssues ? "bg-risk-medium animate-pulse" : "bg-muted-foreground"
-          )} />
-          {allOnline ? "All Systems Go" : someIssues ? "Minor Issues" : "Checking..."}
+          <StatusDot status={allOnline ? "online" : someIssues ? "degraded" : "checking"} />
+          {allOnline ? "All Healthy" : someIssues ? "Issues" : "Checking..."}
         </div>
       </div>
 
-      {/* Service Grid */}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="space-y-1.5">
         {services.map((service) => {
           const Icon = service.icon;
           return (
             <div
               key={service.id}
-              className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+              className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
             >
-              <Icon className="w-4 h-4 text-muted-foreground" />
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium truncate">{service.name}</p>
-                {service.latency && (
-                  <p className="text-[10px] text-muted-foreground">{service.latency}ms</p>
-                )}
-              </div>
+              <Icon className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-xs font-medium flex-1 truncate">{service.name}</span>
+              {service.latency !== undefined && (
+                <span className="text-[10px] text-muted-foreground font-mono">{service.latency}ms</span>
+              )}
               <StatusIcon status={service.status} />
             </div>
           );
         })}
       </div>
 
-      {/* Uptime Summary */}
-      <div className="mt-4 pt-3 border-t border-border/50">
-        <div className="flex items-center justify-between text-xs">
+      <div className="mt-3 pt-2 border-t border-border/50">
+        <div className="flex items-center justify-between text-[10px]">
           <span className="text-muted-foreground">Avg. Uptime (30d)</span>
-          <span className="font-bold text-risk-low">99.52%</span>
+          <span className="font-bold text-risk-low">99.02%</span>
         </div>
       </div>
     </div>
