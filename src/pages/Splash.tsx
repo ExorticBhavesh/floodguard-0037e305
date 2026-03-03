@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, Radio, Wifi } from "lucide-react";
+import { Shield, Radio, Wifi, Zap, Brain, AlertTriangle } from "lucide-react";
 
 export default function Splash() {
   const navigate = useNavigate();
@@ -8,7 +8,6 @@ export default function Splash() {
   const [rippleActive, setRippleActive] = useState(false);
 
   useEffect(() => {
-    // Check if user already onboarded
     const profile = localStorage.getItem("floodguard_profile");
     if (profile) {
       navigate("/dashboard", { replace: true });
@@ -23,10 +22,9 @@ export default function Splash() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden bg-background">
+    <div className="min-h-screen flex flex-col relative overflow-hidden bg-background">
       {/* Animated water wave background */}
       <div className="absolute inset-0 overflow-hidden">
-        {/* Gradient base */}
         <div className="absolute inset-0" style={{
           background: "radial-gradient(ellipse at 50% 120%, hsl(170 100% 44% / 0.08) 0%, transparent 60%)",
         }} />
@@ -55,8 +53,8 @@ export default function Splash() {
           <path className="animate-wave" style={{ animationDelay: "0.5s" }} d="M0,80 C240,40 480,100 720,60 C960,20 1200,80 1440,50 L1440,120 L0,120 Z" fill="hsl(170 100% 44% / 0.5)" />
         </svg>
 
-        {/* Expanding signal rings from center */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+        {/* Expanding signal rings */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2">
           {[...Array(3)].map((_, i) => (
             <div
               key={i}
@@ -74,64 +72,65 @@ export default function Splash() {
       </div>
 
       {/* Content */}
-      <div className={`relative z-10 text-center px-6 max-w-lg transition-all duration-1000 ${showContent ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+      <div className={`flex-1 flex flex-col items-center justify-center relative z-10 px-6 transition-all duration-1000 ${showContent ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+        {/* Team Name */}
+        <div className="mb-6 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+          <p className="text-xs font-bold text-primary tracking-widest uppercase">Team Idiotic_ones</p>
+        </div>
+
         {/* Logo */}
-        <div className="w-24 h-24 mx-auto mb-8 rounded-3xl overflow-hidden shadow-glow border-2 border-primary/30 animate-glow-pulse">
+        <div className="w-20 h-20 mx-auto mb-6 rounded-2xl overflow-hidden shadow-glow border-2 border-primary/30 animate-glow-pulse">
           <img src="/images/floodguard-logo.jpg" alt="FloodGuard" className="w-full h-full object-cover" />
         </div>
 
         {/* Title */}
-        <h1 className="text-5xl sm:text-6xl font-black mb-3 glow-text text-foreground tracking-tight">
+        <h1 className="text-4xl font-black mb-2 glow-text text-foreground tracking-tight text-center">
           Flood<span className="text-primary">Guard</span>
         </h1>
 
-        <p className="text-lg font-medium text-primary/80 mb-2 tracking-wide">
-          Decentralized Disaster Rescue Network
+        <p className="text-sm font-medium text-primary/80 mb-3 tracking-wide text-center">
+          AI-Powered Flood Monitoring & Emergency Alert System
         </p>
 
-        <p className="text-sm text-muted-foreground mb-12 flex items-center justify-center gap-2">
-          <Radio className="w-4 h-4 text-primary/60" />
-          Operates Even Without Internet Using Mesh Technology
+        <p className="text-xs text-muted-foreground mb-8 text-center max-w-xs leading-relaxed">
+          ML Flood Prediction • Real-time Sensors • Risk Indicator • Nearby Alerts • Elevation Analysis • India-wide Flood Centre • SOS System • AI Chatbot
         </p>
 
         {/* CTA Button */}
         <button
           onClick={handleActivate}
-          className="relative group px-10 py-4 rounded-2xl font-bold text-lg text-primary-foreground overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95"
+          className="relative group px-10 py-4 rounded-2xl font-bold text-lg text-primary-foreground overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 mb-6"
           style={{
             background: "var(--gradient-primary)",
             boxShadow: "0 0 30px hsl(170 100% 44% / 0.3), 0 4px 15px hsl(0 0% 0% / 0.3)",
           }}
         >
-          {/* Ripple effect */}
           {rippleActive && (
             <span className="absolute inset-0 flex items-center justify-center">
               <span className="w-4 h-4 rounded-full bg-primary-foreground/30 animate-ripple" />
             </span>
           )}
-          
           <span className="relative flex items-center gap-3">
             <Shield className="w-5 h-5" />
-            Activate Protection
+            Get Started
           </span>
-
-          {/* Hover glow */}
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
             style={{ background: "linear-gradient(135deg, hsl(170 100% 50% / 0.2) 0%, transparent 100%)" }}
           />
         </button>
 
-        {/* Bottom badges */}
-        <div className="flex items-center justify-center gap-4 mt-10 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <Wifi className="w-3.5 h-3.5 text-primary/60" />
-            Mesh Network
-          </span>
-          <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
-          <span className="flex items-center gap-1.5">
-            <Shield className="w-3.5 h-3.5 text-primary/60" />
-            Offline Ready
-          </span>
+        {/* Feature badges grid */}
+        <div className="grid grid-cols-3 gap-3 w-full max-w-xs">
+          {[
+            { icon: Brain, label: "ML Prediction" },
+            { icon: AlertTriangle, label: "SOS Alerts" },
+            { icon: Wifi, label: "Mesh Network" },
+          ].map((item, i) => (
+            <div key={i} className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl bg-card/40 border border-border/30">
+              <item.icon className="w-4 h-4 text-primary/70" />
+              <span className="text-[10px] text-muted-foreground text-center">{item.label}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
