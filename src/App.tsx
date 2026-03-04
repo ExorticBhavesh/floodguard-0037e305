@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import Splash from "./pages/Splash";
 import Onboarding from "./pages/Onboarding";
-import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Alerts from "./pages/Alerts";
 import Chatbot from "./pages/Chatbot";
@@ -30,11 +29,12 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Splash />} />
           <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/home" element={<RequireProfile><Navbar /><Index /></RequireProfile>} />
           <Route path="/dashboard" element={<RequireProfile><Navbar /><Dashboard /></RequireProfile>} />
           <Route path="/alerts" element={<RequireProfile><Navbar /><Alerts /></RequireProfile>} />
           <Route path="/chatbot" element={<RequireProfile><Navbar /><Chatbot /></RequireProfile>} />
           <Route path="/flood-map" element={<RequireProfile><Navbar /><FloodMap /></RequireProfile>} />
+          {/* Redirect old /home to dashboard */}
+          <Route path="/home" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -17,18 +17,25 @@ L.Marker.prototype.options.icon = DefaultIcon;
 
 type RiskFilter = "all" | "high" | "medium" | "low";
 
-// Extended flood zones with more ward-level data
+// India bounds for map locking
+const INDIA_BOUNDS: L.LatLngBoundsExpression = [[6.5, 68.0], [37.0, 97.5]];
+const INDIA_CENTER: [number, number] = [22.5, 79.0];
+
+// Extended flood zones across India
 const floodZonesGeoJSON: GeoJSON.FeatureCollection = {
   type: "FeatureCollection",
   features: [
     { type: "Feature", properties: { name: "Sabarmati Riverfront Zone A", riskLevel: "high", elevation: 12, population: 45000, ward: "Ward 12", readinessScore: 42, forecastWindow: "6-12h", safetyNote: "Move to higher ground. Avoid riverfront walkways." }, geometry: { type: "Polygon", coordinates: [[[72.57, 23.03], [72.59, 23.03], [72.59, 23.05], [72.57, 23.05], [72.57, 23.03]]] } },
-    { type: "Feature", properties: { name: "Vasna-Barrage Zone", riskLevel: "high", elevation: 8, population: 32000, ward: "Ward 8", readinessScore: 28, forecastWindow: "3-6h", safetyNote: "CRITICAL: Evacuation recommended. Contact emergency services." }, geometry: { type: "Polygon", coordinates: [[[72.55, 23.00], [72.58, 23.00], [72.58, 23.02], [72.55, 23.02], [72.55, 23.00]]] } },
-    { type: "Feature", properties: { name: "Kankaria Lake Vicinity", riskLevel: "medium", elevation: 18, population: 28000, ward: "Ward 15", readinessScore: 62, forecastWindow: "12-24h", safetyNote: "Monitor water levels. Keep emergency kit ready." }, geometry: { type: "Polygon", coordinates: [[[72.59, 23.00], [72.62, 23.00], [72.62, 23.02], [72.59, 23.02], [72.59, 23.00]]] } },
-    { type: "Feature", properties: { name: "Chandkheda Low-lying Area", riskLevel: "high", elevation: 10, population: 55000, ward: "Ward 3", readinessScore: 35, forecastWindow: "6-12h", safetyNote: "Low-lying area prone to waterlogging. Stay indoors." }, geometry: { type: "Polygon", coordinates: [[[72.58, 23.10], [72.62, 23.10], [72.62, 23.12], [72.58, 23.12], [72.58, 23.10]]] } },
-    { type: "Feature", properties: { name: "Maninagar Safe Zone", riskLevel: "low", elevation: 35, population: 72000, ward: "Ward 22", readinessScore: 91, forecastWindow: "24h+", safetyNote: "Low risk area. Maintain standard precautions." }, geometry: { type: "Polygon", coordinates: [[[72.60, 22.98], [72.64, 22.98], [72.64, 23.00], [72.60, 23.00], [72.60, 22.98]]] } },
-    { type: "Feature", properties: { name: "Naranpura Residential", riskLevel: "medium", elevation: 20, population: 48000, ward: "Ward 7", readinessScore: 58, forecastWindow: "12-24h", safetyNote: "Moderate drainage capacity. Monitor rainfall intensity." }, geometry: { type: "Polygon", coordinates: [[[72.55, 23.05], [72.58, 23.05], [72.58, 23.07], [72.55, 23.07], [72.55, 23.05]]] } },
-    { type: "Feature", properties: { name: "Satellite Area", riskLevel: "low", elevation: 30, population: 65000, ward: "Ward 18", readinessScore: 85, forecastWindow: "24h+", safetyNote: "Well-drained area with adequate infrastructure." }, geometry: { type: "Polygon", coordinates: [[[72.62, 23.02], [72.66, 23.02], [72.66, 23.04], [72.62, 23.04], [72.62, 23.02]]] } },
-    { type: "Feature", properties: { name: "Bapunagar Industrial", riskLevel: "medium", elevation: 16, population: 38000, ward: "Ward 10", readinessScore: 52, forecastWindow: "12-24h", safetyNote: "Industrial runoff may aggravate flooding. Stay alert." }, geometry: { type: "Polygon", coordinates: [[[72.63, 23.04], [72.67, 23.04], [72.67, 23.06], [72.63, 23.06], [72.63, 23.04]]] } },
+    { type: "Feature", properties: { name: "Vasna-Barrage Zone", riskLevel: "high", elevation: 8, population: 32000, ward: "Ward 8", readinessScore: 28, forecastWindow: "3-6h", safetyNote: "CRITICAL: Evacuation recommended." }, geometry: { type: "Polygon", coordinates: [[[72.55, 23.00], [72.58, 23.00], [72.58, 23.02], [72.55, 23.02], [72.55, 23.00]]] } },
+    { type: "Feature", properties: { name: "Kankaria Lake Vicinity", riskLevel: "medium", elevation: 18, population: 28000, ward: "Ward 15", readinessScore: 62, forecastWindow: "12-24h", safetyNote: "Monitor water levels." }, geometry: { type: "Polygon", coordinates: [[[72.59, 23.00], [72.62, 23.00], [72.62, 23.02], [72.59, 23.02], [72.59, 23.00]]] } },
+    { type: "Feature", properties: { name: "Chandkheda Low-lying Area", riskLevel: "high", elevation: 10, population: 55000, ward: "Ward 3", readinessScore: 35, forecastWindow: "6-12h", safetyNote: "Low-lying area prone to waterlogging." }, geometry: { type: "Polygon", coordinates: [[[72.58, 23.10], [72.62, 23.10], [72.62, 23.12], [72.58, 23.12], [72.58, 23.10]]] } },
+    { type: "Feature", properties: { name: "Maninagar Safe Zone", riskLevel: "low", elevation: 35, population: 72000, ward: "Ward 22", readinessScore: 91, forecastWindow: "24h+", safetyNote: "Low risk area." }, geometry: { type: "Polygon", coordinates: [[[72.60, 22.98], [72.64, 22.98], [72.64, 23.00], [72.60, 23.00], [72.60, 22.98]]] } },
+    { type: "Feature", properties: { name: "Naranpura Residential", riskLevel: "medium", elevation: 20, population: 48000, ward: "Ward 7", readinessScore: 58, forecastWindow: "12-24h", safetyNote: "Moderate drainage capacity." }, geometry: { type: "Polygon", coordinates: [[[72.55, 23.05], [72.58, 23.05], [72.58, 23.07], [72.55, 23.07], [72.55, 23.05]]] } },
+    { type: "Feature", properties: { name: "Mumbai Dharavi", riskLevel: "high", elevation: 5, population: 700000, ward: "Ward M-East", readinessScore: 22, forecastWindow: "3-6h", safetyNote: "Extremely flood-prone. Seek shelter immediately." }, geometry: { type: "Polygon", coordinates: [[[72.85, 19.04], [72.87, 19.04], [72.87, 19.06], [72.85, 19.06], [72.85, 19.04]]] } },
+    { type: "Feature", properties: { name: "Patna Riverfront", riskLevel: "high", elevation: 6, population: 120000, ward: "Patna Zone 1", readinessScore: 31, forecastWindow: "6-12h", safetyNote: "Ganga flooding risk. Monitor dam releases." }, geometry: { type: "Polygon", coordinates: [[[85.10, 25.60], [85.15, 25.60], [85.15, 25.63], [85.10, 25.63], [85.10, 25.60]]] } },
+    { type: "Feature", properties: { name: "Chennai Marina Coast", riskLevel: "medium", elevation: 3, population: 95000, ward: "Chennai Zone 9", readinessScore: 55, forecastWindow: "12-24h", safetyNote: "Cyclone season risk. Watch for storm surges." }, geometry: { type: "Polygon", coordinates: [[[80.27, 13.05], [80.30, 13.05], [80.30, 13.08], [80.27, 13.08], [80.27, 13.05]]] } },
+    { type: "Feature", properties: { name: "Kolkata Howrah Bridge Zone", riskLevel: "medium", elevation: 9, population: 180000, ward: "Kolkata Ward 60", readinessScore: 48, forecastWindow: "12-24h", safetyNote: "Hooghly tidal flooding risk." }, geometry: { type: "Polygon", coordinates: [[[88.33, 22.58], [88.36, 22.58], [88.36, 22.60], [88.33, 22.60], [88.33, 22.58]]] } },
+    { type: "Feature", properties: { name: "Bangalore Varthur Lake", riskLevel: "low", elevation: 28, population: 65000, ward: "BBMP Ward 150", readinessScore: 72, forecastWindow: "24h+", safetyNote: "Urban flooding only during extreme rainfall." }, geometry: { type: "Polygon", coordinates: [[[77.73, 12.94], [77.76, 12.94], [77.76, 12.96], [77.73, 12.96], [77.73, 12.94]]] } },
   ],
 };
 
@@ -40,9 +47,14 @@ function getZoneColor(riskLevel: string): string {
   }
 }
 
-function MapController({ center }: { center: [number, number] }) {
+function MapController({ center, bounds }: { center: [number, number]; bounds: L.LatLngBoundsExpression }) {
   const map = useMap();
-  useState(() => { map.setView(center, 12); });
+  useState(() => {
+    map.setView(center, 5);
+    map.setMaxBounds(bounds);
+    map.setMinZoom(4);
+    map.setMaxZoom(18);
+  });
   return null;
 }
 
@@ -52,7 +64,10 @@ export default function FloodMapPage() {
   const [activeFilter, setActiveFilter] = useState<RiskFilter>("all");
   const [selectedZone, setSelectedZone] = useState<any>(null);
 
-  const center: [number, number] = hasLocation ? [latitude!, longitude!] : [23.02, 72.58];
+  // Always center on India
+  const center: [number, number] = hasLocation && latitude! > 6 && latitude! < 37 && longitude! > 68 && longitude! < 98
+    ? [latitude!, longitude!]
+    : INDIA_CENTER;
 
   const filteredFeatures = {
     ...floodZonesGeoJSON,
@@ -78,10 +93,10 @@ export default function FloodMapPage() {
   };
 
   const filters: { key: RiskFilter; label: string; color: string; count: number }[] = [
-    { key: "all", label: "All Zones", color: "bg-primary", count: floodZonesGeoJSON.features.length },
-    { key: "high", label: "High Risk", color: "bg-risk-critical", count: floodZonesGeoJSON.features.filter(f => f.properties?.riskLevel === "high").length },
-    { key: "medium", label: "Moderate Risk", color: "bg-risk-medium", count: floodZonesGeoJSON.features.filter(f => f.properties?.riskLevel === "medium").length },
-    { key: "low", label: "Low Risk", color: "bg-risk-low", count: floodZonesGeoJSON.features.filter(f => f.properties?.riskLevel === "low").length },
+    { key: "all", label: "All", color: "bg-primary", count: floodZonesGeoJSON.features.length },
+    { key: "high", label: "High", color: "bg-risk-critical", count: floodZonesGeoJSON.features.filter(f => f.properties?.riskLevel === "high").length },
+    { key: "medium", label: "Moderate", color: "bg-risk-medium", count: floodZonesGeoJSON.features.filter(f => f.properties?.riskLevel === "medium").length },
+    { key: "low", label: "Low", color: "bg-risk-low", count: floodZonesGeoJSON.features.filter(f => f.properties?.riskLevel === "low").length },
   ];
 
   return (
@@ -90,31 +105,31 @@ export default function FloodMapPage() {
 
       <div className="relative z-10 h-[calc(100vh-3.5rem)] flex flex-col">
         {/* Header */}
-        <div className="px-4 py-3 bg-card/95 backdrop-blur-sm border-b border-border flex items-center justify-between">
+        <div className="px-4 py-3 bg-card/95 backdrop-blur-sm border-b border-border flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0 sm:justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-gradient-primary shadow-sm">
               <Map className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-lg font-bold">Flood Risk Map</h1>
-              <p className="text-xs text-muted-foreground">Interactive ward-level risk visualization</p>
+              <h1 className="text-lg font-bold">India Flood Risk Map</h1>
+              <p className="text-xs text-muted-foreground">India-only GIS • Ward-level micro-hotspots</p>
             </div>
           </div>
 
           {/* Filters */}
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-muted-foreground" />
+          <div className="flex items-center gap-1.5 overflow-x-auto">
+            <Filter className="w-4 h-4 text-muted-foreground flex-shrink-0" />
             {filters.map((f) => (
               <Button
                 key={f.key}
                 variant={activeFilter === f.key ? "default" : "outline"}
                 size="sm"
-                className="gap-1.5 h-8 text-xs"
+                className="gap-1 h-7 text-[10px] flex-shrink-0"
                 onClick={() => setActiveFilter(f.key)}
               >
-                <div className={`w-2 h-2 rounded-full ${f.color}`} />
+                <div className={`w-1.5 h-1.5 rounded-full ${f.color}`} />
                 {f.label}
-                <Badge variant="secondary" className="ml-1 h-4 text-[10px] px-1">{f.count}</Badge>
+                <Badge variant="secondary" className="ml-0.5 h-3.5 text-[9px] px-1">{f.count}</Badge>
               </Button>
             ))}
           </div>
@@ -122,12 +137,12 @@ export default function FloodMapPage() {
 
         {/* Map */}
         <div className="flex-1 relative">
-          <MapContainer center={center} zoom={12} style={{ height: "100%", width: "100%" }} className="z-0">
+          <MapContainer center={center} zoom={5} style={{ height: "100%", width: "100%" }} className="z-0" maxBounds={INDIA_BOUNDS} minZoom={4}>
             <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <MapController center={center} />
+            <MapController center={center} bounds={INDIA_BOUNDS} />
 
             <GeoJSON
               key={`zones-${activeFilter}-${Date.now()}`}
@@ -139,12 +154,10 @@ export default function FloodMapPage() {
             {hasLocation && (
               <Circle
                 center={[latitude!, longitude!]}
-                radius={200}
+                radius={500}
                 pathOptions={{ color: "#0ea5e9", fillColor: "#0ea5e9", fillOpacity: 0.3 }}
               >
-                <Popup>
-                  <p className="font-semibold text-sm">Your Location</p>
-                </Popup>
+                <Popup><p className="font-semibold text-sm">Your Location</p></Popup>
               </Circle>
             )}
 
@@ -177,9 +190,9 @@ export default function FloodMapPage() {
 
           {/* Selected Zone Detail Panel */}
           {selectedZone && (
-            <div className="absolute top-4 right-4 w-80 p-5 bg-card/95 backdrop-blur-sm rounded-xl border border-border shadow-xl z-[1000] animate-slide-up">
+            <div className="absolute top-4 right-4 w-72 sm:w-80 p-4 bg-card/95 backdrop-blur-sm rounded-xl border border-border shadow-xl z-[1000] animate-slide-up">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="font-bold text-base">{selectedZone.name}</h3>
+                <h3 className="font-bold text-sm">{selectedZone.name}</h3>
                 <button onClick={() => setSelectedZone(null)} className="text-muted-foreground hover:text-foreground">
                   <X className="w-4 h-4" />
                 </button>
@@ -189,25 +202,13 @@ export default function FloodMapPage() {
                 {selectedZone.riskLevel?.toUpperCase()} RISK
               </Badge>
 
-              <div className="space-y-2.5 text-sm">
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-2"><MapPin className="w-3.5 h-3.5 text-muted-foreground" /><span>{selectedZone.ward}</span></div>
+                <div className="flex items-center gap-2"><Mountain className="w-3.5 h-3.5 text-muted-foreground" /><span>Elevation: {selectedZone.elevation}m ASL</span></div>
+                <div className="flex items-center gap-2"><Users className="w-3.5 h-3.5 text-muted-foreground" /><span>Population: {selectedZone.population?.toLocaleString()}</span></div>
+                <div className="flex items-center gap-2"><Clock className="w-3.5 h-3.5 text-muted-foreground" /><span>Forecast: {selectedZone.forecastWindow}</span></div>
                 <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-muted-foreground" />
-                  <span>{selectedZone.ward}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Mountain className="w-4 h-4 text-muted-foreground" />
-                  <span>Elevation: {selectedZone.elevation}m ASL</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-muted-foreground" />
-                  <span>Population: {selectedZone.population?.toLocaleString()}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-muted-foreground" />
-                  <span>Forecast: {selectedZone.forecastWindow}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-muted-foreground" />
+                  <Shield className="w-3.5 h-3.5 text-muted-foreground" />
                   <span>Readiness: <strong className={
                     selectedZone.readinessScore >= 80 ? "text-risk-low" :
                     selectedZone.readinessScore >= 50 ? "text-risk-medium" : "text-risk-critical"
@@ -216,7 +217,7 @@ export default function FloodMapPage() {
               </div>
 
               {selectedZone.safetyNote && (
-                <div className="mt-3 p-3 rounded-lg bg-risk-medium/10 border border-risk-medium/20">
+                <div className="mt-3 p-2.5 rounded-lg bg-risk-medium/10 border border-risk-medium/20">
                   <p className="text-xs flex items-start gap-2">
                     <AlertTriangle className="w-3.5 h-3.5 text-risk-medium flex-shrink-0 mt-0.5" />
                     {selectedZone.safetyNote}
