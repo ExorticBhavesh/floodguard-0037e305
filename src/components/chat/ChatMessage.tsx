@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { AnimatedAvatar, detectEmotion, AvatarEmotion } from "./AnimatedAvatar";
 import { Button } from "@/components/ui/button";
 import { useMemo } from "react";
+import ReactMarkdown from "react-markdown";
 
 interface ChatMessageProps {
   role: "user" | "assistant";
@@ -25,7 +26,6 @@ export function ChatMessage({
 }: ChatMessageProps) {
   const isAssistant = role === "assistant";
 
-  // Detect emotion from message content
   const emotion: AvatarEmotion = useMemo(() => {
     if (isStreaming) return "thinking";
     if (!content) return "neutral";
@@ -56,23 +56,39 @@ export function ChatMessage({
       {/* Message Bubble */}
       <div
         className={cn(
-          "max-w-[80%] px-4 py-3 rounded-2xl relative group",
+          "max-w-[85%] px-4 py-3 rounded-2xl relative group",
           isAssistant
             ? "bg-card border border-border rounded-tl-sm"
             : "bg-primary text-primary-foreground rounded-tr-sm"
         )}
       >
         <div className={cn(
-          "text-sm leading-relaxed whitespace-pre-wrap",
+          "text-sm leading-relaxed",
           isAssistant ? "text-foreground" : "text-primary-foreground"
         )}>
-          {content}
+          {isAssistant ? (
+            <div className="prose prose-sm prose-invert max-w-none 
+              prose-headings:text-foreground prose-headings:font-bold prose-headings:mt-3 prose-headings:mb-1.5
+              prose-h2:text-base prose-h3:text-sm
+              prose-p:text-sm prose-p:leading-relaxed prose-p:my-1.5
+              prose-ul:my-1.5 prose-li:my-0.5 prose-li:text-sm
+              prose-strong:text-primary prose-strong:font-semibold
+              prose-table:text-xs prose-th:px-2 prose-th:py-1 prose-td:px-2 prose-td:py-1
+              prose-table:border prose-th:border prose-td:border prose-th:border-border prose-td:border-border
+              prose-blockquote:border-l-primary prose-blockquote:text-muted-foreground prose-blockquote:text-sm
+              prose-code:text-primary prose-code:bg-primary/10 prose-code:px-1 prose-code:rounded
+            ">
+              <ReactMarkdown>{content}</ReactMarkdown>
+            </div>
+          ) : (
+            <span className="whitespace-pre-wrap">{content}</span>
+          )}
           {isStreaming && (
             <span className="inline-block w-2 h-4 ml-1 bg-primary animate-pulse rounded-sm" />
           )}
         </div>
 
-        {/* Speak button for assistant messages */}
+        {/* Speak button */}
         {isAssistant && !isStreaming && content && (
           <div className="absolute -bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <Button

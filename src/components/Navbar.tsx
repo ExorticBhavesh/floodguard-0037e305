@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, Bot, Bell, LayoutDashboard, Home, Map, LogOut, Radio } from "lucide-react";
+import { Menu, X, Bot, Bell, LayoutDashboard, Map, LogOut, Radio } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AlertNotificationBell } from "./AlertNotificationBell";
 import { MeshStatusIndicator } from "./mesh/MeshStatusIndicator";
 import { toast } from "sonner";
 
 const navLinks = [
-  { name: "Home", path: "/home", icon: Home },
   { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
   { name: "Flood Map", path: "/flood-map", icon: Map },
   { name: "Alerts", path: "/alerts", icon: Bell },
@@ -40,9 +39,14 @@ export function Navbar() {
             <div className="w-9 h-9 rounded-xl overflow-hidden shadow-sm group-hover:shadow-glow transition-shadow duration-200 border border-primary/20">
               <img src="/images/floodguard-logo.jpg" alt="FloodGuard" className="w-full h-full object-cover" />
             </div>
-            <span className="font-bold text-base hidden sm:block">
-              Flood<span className="text-primary">Guard</span>
-            </span>
+            <div className="hidden sm:block">
+              <span className="font-bold text-base">
+                Flood<span className="text-primary">Guard</span>
+              </span>
+              <span className="ml-2 text-[9px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-semibold uppercase tracking-wider">
+                AI Powered
+              </span>
+            </div>
           </Link>
 
           {/* Mesh Status - center */}
@@ -102,7 +106,6 @@ export function Navbar() {
       {isOpen && (
         <div className="md:hidden border-t border-border/30 glass-surface animate-fade-in">
           <div className="container mx-auto px-4 py-3 space-y-1">
-            {/* Mesh status in mobile */}
             <div className="px-3 py-2 mb-2">
               <MeshStatusIndicator isActive={true} nodeCount={6} mode="simulation" />
             </div>

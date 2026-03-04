@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, Radio, Wifi, Zap, Brain, AlertTriangle } from "lucide-react";
+import { Shield, Wifi, Brain, AlertTriangle, Satellite, Map, Bot, Activity } from "lucide-react";
 
 export default function Splash() {
   const navigate = useNavigate();
@@ -23,13 +23,13 @@ export default function Splash() {
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-background">
-      {/* Animated water wave background */}
+      {/* Animated background */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute inset-0" style={{
           background: "radial-gradient(ellipse at 50% 120%, hsl(170 100% 44% / 0.08) 0%, transparent 60%)",
         }} />
         
-        {/* Floating signal particles */}
+        {/* Floating particles */}
         {[...Array(20)].map((_, i) => (
           <div
             key={i}
@@ -53,17 +53,15 @@ export default function Splash() {
           <path className="animate-wave" style={{ animationDelay: "0.5s" }} d="M0,80 C240,40 480,100 720,60 C960,20 1200,80 1440,50 L1440,120 L0,120 Z" fill="hsl(170 100% 44% / 0.5)" />
         </svg>
 
-        {/* Expanding signal rings */}
+        {/* Signal rings */}
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2">
           {[...Array(3)].map((_, i) => (
             <div
               key={i}
               className="absolute rounded-full border border-primary/10 animate-signal"
               style={{
-                width: "100px",
-                height: "100px",
-                top: "-50px",
-                left: "-50px",
+                width: "100px", height: "100px",
+                top: "-50px", left: "-50px",
                 animationDelay: `${i * 0.7}s`,
               }}
             />
@@ -84,22 +82,22 @@ export default function Splash() {
         </div>
 
         {/* Title */}
-        <h1 className="text-4xl font-black mb-2 glow-text text-foreground tracking-tight text-center">
+        <h1 className="text-4xl sm:text-5xl font-black mb-2 glow-text text-foreground tracking-tight text-center">
           Flood<span className="text-primary">Guard</span>
         </h1>
 
-        <p className="text-sm font-medium text-primary/80 mb-3 tracking-wide text-center">
+        <p className="text-sm font-medium text-primary/80 mb-2 tracking-wide text-center">
           AI-Powered Flood Monitoring & Emergency Alert System
         </p>
 
-        <p className="text-xs text-muted-foreground mb-8 text-center max-w-xs leading-relaxed">
-          ML Flood Prediction • Real-time Sensors • Risk Indicator • Nearby Alerts • Elevation Analysis • India-wide Flood Centre • SOS System • AI Chatbot
+        <p className="text-xs text-muted-foreground mb-8 text-center max-w-sm leading-relaxed">
+          ML Flood Prediction • Real-time Monitoring • Risk Indicator • Nearby Alerts • Elevation Analysis • India-wide Flood Centre • BLE SOS System • AI Chatbot
         </p>
 
         {/* CTA Button */}
         <button
           onClick={handleActivate}
-          className="relative group px-10 py-4 rounded-2xl font-bold text-lg text-primary-foreground overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 mb-6"
+          className="relative group px-10 py-4 rounded-2xl font-bold text-lg text-primary-foreground overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 mb-8"
           style={{
             background: "var(--gradient-primary)",
             boxShadow: "0 0 30px hsl(170 100% 44% / 0.3), 0 4px 15px hsl(0 0% 0% / 0.3)",
@@ -114,21 +112,19 @@ export default function Splash() {
             <Shield className="w-5 h-5" />
             Get Started
           </span>
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            style={{ background: "linear-gradient(135deg, hsl(170 100% 50% / 0.2) 0%, transparent 100%)" }}
-          />
         </button>
 
-        {/* Feature badges grid */}
-        <div className="grid grid-cols-3 gap-3 w-full max-w-xs">
+        {/* Feature grid */}
+        <div className="grid grid-cols-4 gap-2 w-full max-w-sm">
           {[
             { icon: Brain, label: "ML Prediction" },
+            { icon: Map, label: "GIS Map" },
             { icon: AlertTriangle, label: "SOS Alerts" },
-            { icon: Wifi, label: "Mesh Network" },
+            { icon: Bot, label: "AI Chat" },
           ].map((item, i) => (
             <div key={i} className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl bg-card/40 border border-border/30">
               <item.icon className="w-4 h-4 text-primary/70" />
-              <span className="text-[10px] text-muted-foreground text-center">{item.label}</span>
+              <span className="text-[9px] text-muted-foreground text-center leading-tight">{item.label}</span>
             </div>
           ))}
         </div>

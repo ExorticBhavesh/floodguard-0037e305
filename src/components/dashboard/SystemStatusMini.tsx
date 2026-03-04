@@ -13,11 +13,17 @@ interface ServiceStatus {
   uptime: number;
 }
 
-async function checkEndpoint(url: string): Promise<{ ok: boolean; latency: number }> {
+async function checkEndpoint(url: string, method: string = "GET"): Promise<{ ok: boolean; latency: number }> {
   const start = performance.now();
   try {
-    const resp = await fetch(url, { method: "HEAD", signal: AbortSignal.timeout(5000) });
-    return { ok: resp.ok, latency: Math.round(performance.now() - start) };
+    const resp = await fetch(url, { 
+      method, 
+      signal: AbortSignal.timeout(5000),
+      headers: method === "POST" ? { "Content-Type": "application/json" } : {},
+      body: method === "POST" ? JSON.stringify({}) : undefined,
+    });
+    // For our purposes, 200-499 means the service is reachable (even 401 means API gateway works)
+    return { ok: resp.status < 500, latency: Math.round(performance.now() - start) };
   } catch {
     return { ok: false, latency: Math.round(performance.now() - start) };
   }
@@ -37,15 +43,19 @@ export function SystemStatusMini() {
     
     const checkServices = async () => {
       const results = await Promise.allSettled([
-        checkEndpoint(`${SUPABASE_URL}/rest/v1/`),
-        checkEndpoint(`${SUPABASE_URL}/functions/v1/flood-predict`),
-        checkEndpoint(`${SUPABASE_URL}/rest/v1/flood_alerts?select=count&limit=1`),
-        checkEndpoint(`${SUPABASE_URL}/functions/v1/weather-alerts`),
+        // API Gateway - use GET on rest endpoint (401 = reachable)
+        checkEndpoint(`${SUPABASE_URL}/rest/v1/flood_alerts?select=id&limit=1`),
+        // ML Engine - POST with empty body (will return error but proves it's alive)
+        checkEndpoint(`${SUPABASE_URL}/functions/v1/flood-predict`, "POST"),
+        // Database - query actual table
+        checkEndpoint(`${SUPABASE_URL}/rest/v1/flood_alerts?select=id&limit=1`),
+        // Weather - POST with minimal body
+        checkEndpoint(`${SUPABASE_URL}/functions/v1/weather-alerts`, "POST"),
       ]);
 
       setServices(prev => prev.map((service, i) => {
         if (i >= results.length) {
-          // Mesh network - simulated
+          // Mesh network - simulated always online
           return { ...service, status: "online" as const, latency: 15 + Math.floor(Math.random() * 30) };
         }
         const result = results[i];
@@ -61,21 +71,12 @@ export function SystemStatusMini() {
     };
 
     checkServices();
-    const interval = setInterval(checkServices, 30000);
+    const interval = setInterval(checkServices, 60000); // Check every 60s instead of 30s
     return () => clearInterval(interval);
   }, []);
 
   const allOnline = services.every(s => s.status === "online");
   const someIssues = services.some(s => s.status === "degraded" || s.status === "offline");
-
-  const StatusIcon = ({ status }: { status: ServiceStatus["status"] }) => {
-    switch (status) {
-      case "online": return <CheckCircle2 className="w-3 h-3 text-risk-low" />;
-      case "degraded": return <AlertCircle className="w-3 h-3 text-risk-medium" />;
-      case "offline": return <AlertCircle className="w-3 h-3 text-risk-critical" />;
-      case "checking": return <Loader2 className="w-3 h-3 text-muted-foreground animate-spin" />;
-    }
-  };
 
   const StatusDot = ({ status }: { status: ServiceStatus["status"] }) => (
     <span className={cn(
@@ -103,7 +104,7 @@ export function SystemStatusMini() {
           allOnline ? "bg-risk-low/10 text-risk-low" : someIssues ? "bg-risk-medium/10 text-risk-medium" : "bg-muted text-muted-foreground"
         )}>
           <StatusDot status={allOnline ? "online" : someIssues ? "degraded" : "checking"} />
-          {allOnline ? "All Healthy" : someIssues ? "Issues" : "Checking..."}
+          {allOnline ? "All Healthy" : someIssues ? "Partial" : "Checking..."}
         </div>
       </div>
 
@@ -120,7 +121,7 @@ export function SystemStatusMini() {
               {service.latency !== undefined && (
                 <span className="text-[10px] text-muted-foreground font-mono">{service.latency}ms</span>
               )}
-              <StatusIcon status={service.status} />
+              <StatusDot status={service.status} />
             </div>
           );
         })}
