@@ -1,11 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { MeshDashboard } from "@/components/mesh/MeshDashboard";
 import {
   Droplets, CloudRain, Waves, AlertTriangle, Bell,
-  TrendingUp, Activity, MapPin, Gauge, ThermometerSun,
-  RefreshCw, Layers, Map, Mountain, Download, Shield, Brain, Cpu, Satellite,
+  TrendingUp, MapPin, Gauge, ThermometerSun,
+  RefreshCw, Layers, Map, Mountain, Brain,
 } from "lucide-react";
-import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,8 +12,8 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Line,
 } from "recharts";
-import { FloodMap } from "@/components/FloodMap";
 import { FloodMapInteractive } from "@/components/FloodMapInteractive";
+import { FloodMap } from "@/components/FloodMap";
 import { WeatherWidget } from "@/components/WeatherWidget";
 import { LocationBasedAlerts } from "@/components/LocationBasedAlerts";
 import { PredictionPanel } from "@/components/PredictionPanel";
@@ -25,10 +24,10 @@ import { useGeolocation } from "@/hooks/useGeolocation";
 import { Badge } from "@/components/ui/badge";
 import { RiskGauge } from "@/components/dashboard/RiskGauge";
 import { LiveDataFeed } from "@/components/dashboard/LiveDataFeed";
-import { SystemStatusMini } from "@/components/dashboard/SystemStatusMini";
 import { ExportDropdown } from "@/components/ExportDropdown";
 import { exportPredictionToCSV, exportPredictionToPDF } from "@/lib/exportUtils";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
+import { supabase } from "@/integrations/supabase/client";
 
 type RiskLevel = "low" | "medium" | "high" | "critical";
 
@@ -38,22 +37,35 @@ interface ChartDataPoint {
   predicted: number;
 }
 
+// Simulated live sensor data generator
+function generateSensorData() {
+  return {
+    rainfall: Math.round(5 + Math.random() * 80),
+    waterLevel: +(2 + Math.random() * 6).toFixed(1),
+    humidity: Math.round(50 + Math.random() * 45),
+    soilMoisture: Math.round(30 + Math.random() * 60),
+    elevation: Math.round(8 + Math.random() * 35),
+  };
+}
+
 export default function Dashboard() {
-  const [rainfall, setRainfall] = useState(25);
-  const [waterLevel, setWaterLevel] = useState(4);
-  const [humidity, setHumidity] = useState(70);
-  const [soilMoisture, setSoilMoisture] = useState(50);
-  const [elevation, setElevation] = useState(20);
+  const [sensorData, setSensorData] = useState(generateSensorData);
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
-  const [autoRefresh, setAutoRefresh] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
-  const { alerts, criticalCount, highCount, refetch: refetchAlerts } = useFloodAlerts();
+  const { alerts, criticalCount, refetch: refetchAlerts } = useFloodAlerts();
   const { prediction, isLoading: isPredicting, predict, sendSMSAlert } = useFloodPrediction();
   const { latitude, longitude, hasLocation, locationName } = useGeolocation();
 
-  const riskLevel: RiskLevel = prediction?.riskLevel || "low";
+  // Compute risk level from probability using specified thresholds
+  const computedRiskLevel: RiskLevel = useMemo(() => {
+    const prob = prediction?.probability ?? Math.round((sensorData.rainfall / 150) * 50 + (sensorData.waterLevel / 10) * 50);
+    if (prob >= 85) return "critical";
+    if (prob >= 50) return "medium";
+    return "low";
+  }, [prediction?.probability, sensorData.rainfall, sensorData.waterLevel]);
 
+  // Generate chart data once
   useEffect(() => {
     const data: ChartDataPoint[] = [];
     const now = new Date();
@@ -69,46 +81,78 @@ export default function Dashboard() {
     setChartData(data);
   }, []);
 
+  // Auto-refresh sensors every 30 seconds
   useEffect(() => {
-    setChartData((prev) => {
-      if (!prev.length) return prev;
-      const newData = [...prev];
-      newData[newData.length - 1] = {
-        ...newData[newData.length - 1],
-        level: waterLevel,
-        predicted: prediction?.predictedWaterLevel || waterLevel + 0.3 + Math.random() * 0.5,
-      };
-      return newData;
-    });
-  }, [waterLevel, prediction?.predictedWaterLevel]);
-
-  useEffect(() => {
-    if (!autoRefresh) return;
     const interval = setInterval(() => {
+      const newData = generateSensorData();
+      setSensorData(newData);
       refetchAlerts();
       setLastRefresh(new Date());
-      setHumidity(prev => Math.min(100, Math.max(0, prev + (Math.random() - 0.5) * 5)));
-      setSoilMoisture(prev => Math.min(100, Math.max(0, prev + (Math.random() - 0.5) * 3)));
     }, 30000);
     return () => clearInterval(interval);
-  }, [autoRefresh, refetchAlerts]);
+  }, [refetchAlerts]);
+
+  // Auto-predict whenever sensor data changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      predict({
+        rainfall: sensorData.rainfall,
+        riverLevel: sensorData.waterLevel,
+        humidity: sensorData.humidity,
+        elevation: sensorData.elevation,
+        soilMoisture: sensorData.soilMoisture,
+        lat: hasLocation ? latitude! : undefined,
+        lon: hasLocation ? longitude! : undefined,
+      });
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [sensorData, hasLocation, latitude, longitude, predict]);
 
   const handleSendAlert = useCallback(async () => {
-    const location = hasLocation ? `${latitude!.toFixed(4)}, ${longitude!.toFixed(4)}` : "Ahmedabad, Gujarat";
-    await sendSMSAlert(riskLevel, location);
-  }, [riskLevel, hasLocation, latitude, longitude, sendSMSAlert]);
+    // Retrieve emergency contact from stored profile
+    const stored = localStorage.getItem("floodguard_profile");
+    let emergencyContact: string | undefined;
+    if (stored) {
+      try {
+        const profile = JSON.parse(stored);
+        emergencyContact = profile.emergencyContact;
+        // Also try DB for latest
+        if (profile.phone) {
+          const { data } = await supabase
+            .from("app_users")
+            .select("emergency_contact")
+            .eq("phone", profile.phone)
+            .maybeSingle();
+          if (data?.emergency_contact) emergencyContact = data.emergency_contact;
+        }
+      } catch {}
+    }
+
+    const location = hasLocation ? `${latitude!.toFixed(4)}, ${longitude!.toFixed(4)}` : locationName || "India";
+    await sendSMSAlert(computedRiskLevel, location, emergencyContact ? [emergencyContact] : undefined);
+  }, [computedRiskLevel, hasLocation, latitude, longitude, locationName, sendSMSAlert]);
 
   const handleManualRefresh = useCallback(() => {
+    const newData = generateSensorData();
+    setSensorData(newData);
     refetchAlerts();
     setLastRefresh(new Date());
     toast({ title: "Data Refreshed", description: "All sensors and predictions updated" });
   }, [refetchAlerts]);
 
+  const sensorCards = [
+    { icon: CloudRain, label: "Rainfall", value: `${sensorData.rainfall}mm`, color: "text-primary" },
+    { icon: Waves, label: "River Level", value: `${sensorData.waterLevel}m`, color: "text-primary" },
+    { icon: Gauge, label: "Humidity", value: `${sensorData.humidity}%`, color: "text-primary" },
+    { icon: ThermometerSun, label: "Soil Moisture", value: `${sensorData.soilMoisture}%`, color: "text-risk-medium" },
+    { icon: Mountain, label: "Elevation", value: `${sensorData.elevation}m`, color: "text-primary" },
+  ];
+
   return (
     <div className="min-h-screen pt-14 pb-6 relative overflow-hidden">
       <AnimatedBackground variant="dashboard" />
 
-      {riskLevel === "critical" && (
+      {computedRiskLevel === "critical" && (
         <div className="fixed inset-0 pointer-events-none z-0">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-risk-critical/10 rounded-full blur-[180px] animate-pulse" />
         </div>
@@ -152,8 +196,8 @@ export default function Dashboard() {
             </Badge>
             {prediction && (
               <ExportDropdown
-                onExportCSV={() => exportPredictionToCSV(prediction, hasLocation ? `${latitude?.toFixed(4)}, ${longitude?.toFixed(4)}` : 'Ahmedabad')}
-                onExportPDF={() => exportPredictionToPDF(prediction, hasLocation ? `${latitude?.toFixed(4)}, ${longitude?.toFixed(4)}` : 'Ahmedabad')}
+                onExportCSV={() => exportPredictionToCSV(prediction, hasLocation ? `${latitude?.toFixed(4)}, ${longitude?.toFixed(4)}` : 'India')}
+                onExportPDF={() => exportPredictionToPDF(prediction, hasLocation ? `${latitude?.toFixed(4)}, ${longitude?.toFixed(4)}` : 'India')}
                 label=""
                 size="sm"
               />
@@ -164,16 +208,10 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Live Sensor Feed - Horizontal scroll */}
+        {/* Live Sensor Feed - TOP - Horizontal scroll */}
         <div className="mb-4 -mx-4 px-4">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-            {[
-              { icon: CloudRain, label: "Rainfall", value: `${rainfall}mm`, color: "text-primary" },
-              { icon: Waves, label: "River Level", value: `${waterLevel.toFixed(1)}m`, color: "text-primary" },
-              { icon: Gauge, label: "Humidity", value: `${humidity.toFixed(0)}%`, color: "text-primary" },
-              { icon: ThermometerSun, label: "Soil Moisture", value: `${soilMoisture.toFixed(0)}%`, color: "text-risk-medium" },
-              { icon: Mountain, label: "Elevation", value: `${elevation}m`, color: "text-primary" },
-            ].map((item, i) => (
+            {sensorCards.map((item, i) => (
               <div key={i} className="flex-shrink-0 w-28 sm:w-32 p-3 rounded-xl bg-card/80 border border-border/50 text-center hover:border-primary/30 transition-colors">
                 <item.icon className={`w-4 h-4 mx-auto mb-1.5 ${item.color}`} />
                 <div className="text-sm font-bold tabular-nums">{item.value}</div>
@@ -183,48 +221,23 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Desktop: 2-col layout, Mobile: stack */}
+        {/* Desktop: 2-col, Mobile: stack */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Left Column */}
           <div className="space-y-4">
             {/* Risk Gauge */}
             <RiskGauge
-              riskLevel={riskLevel}
-              probability={prediction?.probability || Math.round((rainfall / 150) * 50 + (waterLevel / 10) * 50)}
+              riskLevel={computedRiskLevel}
+              probability={prediction?.probability || Math.round((sensorData.rainfall / 150) * 50 + (sensorData.waterLevel / 10) * 50)}
             />
 
-            {/* Sensor Controls */}
-            <div className="pro-card p-4">
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-1.5">
-                <Activity className="w-3 h-3 text-primary" />
-                Data Input Panel
-              </h3>
-              <div className="space-y-3">
-                {[
-                  { icon: CloudRain, label: "Rainfall", value: rainfall, setter: setRainfall, max: 150, unit: "mm" },
-                  { icon: Waves, label: "River Level", value: waterLevel, setter: setWaterLevel, max: 10, step: 0.1, unit: "m" },
-                  { icon: Gauge, label: "Humidity", value: humidity, setter: setHumidity, max: 100, unit: "%" },
-                ].map((item, i) => (
-                  <div key={i} className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-medium flex items-center gap-1"><item.icon className="w-3 h-3 text-primary" />{item.label}</label>
-                      <span className="text-xs font-mono font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
-                        {typeof item.value === 'number' && item.step ? item.value.toFixed(1) : item.value}{item.unit}
-                      </span>
-                    </div>
-                    <Slider value={[item.value]} onValueChange={(v) => item.setter(v[0])} max={item.max} step={item.step || 1} />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* ML Prediction */}
+            {/* ML Prediction - auto from live sensors, no manual input */}
             <PredictionPanel
-              rainfall={rainfall}
-              riverLevel={waterLevel}
-              humidity={humidity}
-              elevation={elevation}
-              soilMoisture={soilMoisture}
+              rainfall={sensorData.rainfall}
+              riverLevel={sensorData.waterLevel}
+              humidity={sensorData.humidity}
+              elevation={sensorData.elevation}
+              soilMoisture={sensorData.soilMoisture}
               autoPredict={true}
               lat={hasLocation ? latitude! : undefined}
               lon={hasLocation ? longitude! : undefined}
@@ -233,7 +246,7 @@ export default function Dashboard() {
             {/* SMS Alert Button */}
             <Button
               className={`w-full gap-2 h-11 font-bold ${
-                riskLevel === "critical" || riskLevel === "high"
+                computedRiskLevel === "critical"
                   ? "bg-risk-critical hover:bg-risk-critical/90 animate-pulse"
                   : "bg-primary hover:bg-primary/90"
               }`}
@@ -313,38 +326,37 @@ export default function Dashboard() {
                 ))}
               </div>
             </div>
-
-            {/* Elevation Analysis */}
-            <ElevationHeatmap />
-
-            {/* System Health */}
-            <SystemStatusMini />
           </div>
         </div>
 
-        {/* Full-width sections */}
+        {/* Full-width: GIS Map / Quick View / Elevation tabs */}
         <div className="mt-4 space-y-4">
-          {/* GIS Map */}
-          <Tabs defaultValue="interactive-map" className="w-full">
-            <TabsList className="mb-2 h-8">
-              <TabsTrigger value="interactive-map" className="gap-1 text-[10px]">
-                <Map className="w-3 h-3" />GIS Map
+          <Tabs defaultValue="gis-map" className="w-full">
+            <TabsList className="mb-2 h-9">
+              <TabsTrigger value="gis-map" className="gap-1.5 text-xs">
+                <Map className="w-3.5 h-3.5" />GIS Map
               </TabsTrigger>
-              <TabsTrigger value="simple-map" className="gap-1 text-[10px]">
-                <Layers className="w-3 h-3" />Quick View
+              <TabsTrigger value="quick-view" className="gap-1.5 text-xs">
+                <Layers className="w-3.5 h-3.5" />Quick View
+              </TabsTrigger>
+              <TabsTrigger value="elevation" className="gap-1.5 text-xs">
+                <Mountain className="w-3.5 h-3.5" />Elevation Analysis
               </TabsTrigger>
             </TabsList>
-            <TabsContent value="interactive-map" className="mt-0">
+            <TabsContent value="gis-map" className="mt-0">
               <div className="pro-card p-3">
                 <FloodMapInteractive showElevation={true} showFloodZones={true} showAlerts={true} height="350px" />
               </div>
             </TabsContent>
-            <TabsContent value="simple-map" className="mt-0">
+            <TabsContent value="quick-view" className="mt-0">
               <div className="pro-card p-3">
                 <div className="h-52 rounded-lg overflow-hidden">
-                  <FloodMap riskLevel={riskLevel} />
+                  <FloodMap riskLevel={computedRiskLevel} />
                 </div>
               </div>
+            </TabsContent>
+            <TabsContent value="elevation" className="mt-0">
+              <ElevationHeatmap />
             </TabsContent>
           </Tabs>
 
